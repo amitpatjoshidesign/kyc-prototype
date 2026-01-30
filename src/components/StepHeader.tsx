@@ -23,7 +23,7 @@ export default function StepHeader({
         <p className="text-sm text-stone-500 mb-1">
           Step {currentStep} of {totalSteps}
         </p>
-        <h1 className="text-2xl font-bold text-stone-900">{title}</h1>
+        <h1 className="text-xl font-bold text-stone-900">{title}</h1>
       </div>
       <div className="flex items-center gap-3">
         <Button

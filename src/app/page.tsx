@@ -163,8 +163,8 @@ function TextField({
   placeholder?: string;
 }) {
   return (
-    <div>
-      <Label className="mb-1.5 block">{label}</Label>
+    <div className="space-y-2">
+      <Label>{label}</Label>
       <Input
         type={type}
         value={value}
@@ -187,8 +187,8 @@ function SelectField({
   options: { value: string; label: string }[];
 }) {
   return (
-    <div>
-      <Label className="mb-1.5 block">{label}</Label>
+    <div className="space-y-2">
+      <Label>{label}</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger>
           <SelectValue placeholder="Select..." />
@@ -402,7 +402,7 @@ export default function Home() {
     const d = formData.businessDetails;
     return (
       <section className="space-y-5">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <TextField
             label="Business name"
             value={d.businessName}
@@ -464,7 +464,7 @@ export default function Home() {
           />
           <span className="text-sm text-stone-700">I have GST proof</span>
         </label>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <FileUploadField
             label="Memorandum of association"
             file={d.memorandum}
@@ -529,7 +529,7 @@ export default function Home() {
     const d = formData.businessAddress;
     return (
       <section className="space-y-5">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <div className="col-span-2">
             <TextField
               label="Address line 1"
@@ -589,7 +589,7 @@ export default function Home() {
         <p className="mb-5 text-sm text-stone-500">
           Upload category-specific documents required for your business type.
         </p>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <FileUploadField
             label="Category document 1"
             file={d.categoryDoc1}
@@ -641,7 +641,7 @@ export default function Home() {
     const d = formData.signatory;
     return (
       <section className="space-y-5">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <TextField
             label="Full name"
             value={d.name}
@@ -676,7 +676,7 @@ export default function Home() {
     const d = formData.bank;
     return (
       <section className="space-y-5">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <TextField
             label="Account number"
             value={d.accountNumber}
@@ -706,7 +706,7 @@ export default function Home() {
     const d = formData.poc;
     return (
       <section className="space-y-5">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <TextField
             label="POC name"
             value={d.name}
@@ -774,24 +774,13 @@ export default function Home() {
     <div className="relative min-h-screen bg-stone-50">
       <Header />
 
-      <div className="relative mx-auto max-w-[1080px] px-4 pt-6 pb-0">
+      <div className="relative z-10 mx-auto max-w-[1080px] px-4 pt-6 pb-0">
         <Breadcrumb />
-        {/* Teal gradient behind central card */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 max-h-[640px]"
-          style={{
-            opacity: 0.3,
-            background:
-              "linear-gradient(5deg, #009CB0 -31.37%, #009CB0 0.52%, #D5FFFF 96.2%)",
-            filter: "blur(47.6px)",
-          }}
-        />
 
         <div className="relative flex min-h-[calc(100vh-64px-41px-24px)] overflow-hidden rounded-t-xl bg-white shadow-sm">
           <Sidebar steps={sidebarSteps} />
 
-          <main className="flex-1 p-8">
+          <main className="flex-1 p-6">
             <div className="max-w-[812px]">
               <StepHeader
                 currentStep={displayStep}
@@ -808,6 +797,18 @@ export default function Home() {
           </main>
         </div>
       </div>
+
+      {/* Teal gradient — full width, sticky bottom */}
+      <div
+        aria-hidden
+        className="pointer-events-none sticky bottom-0 z-0 h-[640px] w-full -mt-[640px]"
+        style={{
+          opacity: 0.3,
+          background:
+            "linear-gradient(5deg, #009CB0 -31.37%, #009CB0 0.52%, #D5FFFF 96.2%)",
+          filter: "blur(47.6px)",
+        }}
+      />
     </div>
   );
 }

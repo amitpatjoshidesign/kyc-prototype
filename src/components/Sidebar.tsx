@@ -24,7 +24,7 @@ export default function Sidebar({ steps }: SidebarProps) {
 
   return (
     <aside className="w-[268px] shrink-0 p-4">
-      <ul className="space-y-1">
+      <ul className="space-y-3">
         {steps.map((step) => {
           if (!step.completed) stepNumber++;
 
@@ -41,27 +41,27 @@ export default function Sidebar({ steps }: SidebarProps) {
                     <Check size={12} weight="bold" className="text-white" />
                   </span>
                 ) : (
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-medium text-white">
                     {stepNumber}
                   </span>
                 )}
                 <span className="flex-1 text-sm">{step.label}</span>
                 {step.hasSubSteps && (
                   step.subSteps ? (
-                    <CaretUp size={16} weight="bold" className="shrink-0 text-muted-foreground" />
+                    <CaretUp size={12} weight="bold" className="shrink-0 text-muted-foreground" />
                   ) : (
-                    <CaretDown size={16} weight="bold" className="shrink-0 text-muted-foreground" />
+                    <CaretDown size={12} weight="bold" className="shrink-0 text-muted-foreground" />
                   )
                 )}
               </div>
 
               {/* Sub-steps */}
               {step.subSteps && (
-                <ul className="ml-2.5 pl-5 mt-1 space-y-0.5">
+                <ul className="ml-2.5 pl-5 pt-3 pb-0">
                   {step.subSteps.map((sub) => (
                     <li
                       key={sub.label}
-                      className={`rounded-md px-3 py-2 text-sm ${
+                      className={`rounded-md px-3 py-3 text-sm ${
                         sub.active
                           ? "bg-sidebar-accent font-medium text-foreground"
                           : "text-foreground"
@@ -89,7 +89,7 @@ export default function Sidebar({ steps }: SidebarProps) {
                         {sub.label}
                       </div>
                       <div
-                        className={`text-xs mt-0.5 ml-6 ${
+                        className={`text-xs mt-1 ml-6 ${
                           "text-muted-foreground"
                         }`}
                       >
