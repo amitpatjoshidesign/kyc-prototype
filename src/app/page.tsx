@@ -348,6 +348,7 @@ const STEP_TITLES = [
   "Verify your business",
   "Signatory details",
   "Bank account verification",
+  "KYC Summary",
 ];
 
 const SUB_STEP_TITLES = [
@@ -509,6 +510,7 @@ export default function Home() {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [otpSent, setOtpSent] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
+  const [kycSubmitted, setKycSubmitted] = useState(false);
 
   const startOtpTimer = useCallback(() => {
     setOtpSent(true);
@@ -537,7 +539,8 @@ export default function Home() {
   // ── Navigation ──
 
   const isFirstStep = currentStep === 0;
-  const isLastStep = currentStep === 4;
+  const isLastStep = currentStep === 5;
+  const isSummaryStep = currentStep === 5;
 
   function handleNext() {
     if (currentStep === 2) {
@@ -564,7 +567,7 @@ export default function Home() {
   }
 
   function handleSubmit() {
-    alert("KYC form submitted!");
+    setKycSubmitted(true);
   }
 
   // ── CKYCr handlers ──
@@ -716,6 +719,15 @@ export default function Home() {
         completed: step4Complete && currentStep > 4,
         active: currentStep === 4,
       },
+      ...(currentStep === 5
+        ? [
+            {
+              label: "KYC Summary",
+              completed: false,
+              active: true,
+            },
+          ]
+        : []),
     ];
   }, [formData, currentStep, currentSubStep]);
 
@@ -1515,6 +1527,163 @@ export default function Home() {
     );
   }
 
+  function SummaryCard({
+    title,
+    onEdit,
+    rows,
+  }: {
+    title: string;
+    onEdit: () => void;
+    rows: { label: string; value: string }[];
+  }) {
+    return (
+      <div className="rounded-lg border border-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <button
+            type="button"
+            onClick={onEdit}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Edit
+          </button>
+        </div>
+        <div className="space-y-3">
+          {rows.map((row) => (
+            <div key={row.label} className="flex gap-8">
+              <span className="w-48 shrink-0 text-sm text-muted-foreground">{row.label}</span>
+              <span className="text-sm text-foreground">{row.value || "—"}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function renderSummary() {
+    if (kycSubmitted) {
+      return (
+        <section className="space-y-6">
+          <div className="rounded-lg border border-border p-10 text-center space-y-3">
+            <div className="flex justify-center">
+              <CheckCircle size={48} weight="fill" className="text-primary" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">KYC submitted for review</h2>
+            <p className="text-sm text-muted-foreground">
+              We will reach out to you once we have verified your KYC, it would usually take 2-4 working days
+            </p>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border px-5 py-3">
+            <span className="text-sm text-muted-foreground">
+              Ref ID. - {Math.floor(10000000 + Math.random() * 90000000)}
+            </span>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Go to home
+            </Button>
+          </div>
+        </section>
+      );
+    }
+
+    const gs = formData.getStarted;
+    const bd = formData.businessDetails;
+    const cd = formData.companyDocuments;
+    const ba = formData.businessAddress;
+    const sig = formData.signatory;
+    const bank = formData.bank;
+
+    const regTypeLabel =
+      [
+        { value: "pvt_ltd", label: "Private Limited Company" },
+        { value: "public_ltd", label: "Public Limited Company" },
+        { value: "llp", label: "LLP" },
+        { value: "partnership", label: "Partnership Firm" },
+        { value: "sole_proprietorship", label: "Sole Proprietorship" },
+        { value: "opc", label: "One Person Company" },
+        { value: "trust", label: "Trust / Society" },
+        { value: "huf", label: "HUF" },
+      ].find((o) => o.value === gs.registrationType)?.label || gs.registrationType;
+
+    return (
+      <section className="space-y-5">
+        <SummaryCard
+          title="Mobile verification"
+          onEdit={() => setCurrentStep(1)}
+          rows={[
+            { label: "Mobile number", value: gs.phone },
+            { label: "PAN", value: gs.pan },
+          ]}
+        />
+
+        <SummaryCard
+          title="Company registration details"
+          onEdit={() => setCurrentStep(1)}
+          rows={[
+            { label: "Business registration type", value: regTypeLabel },
+          ]}
+        />
+
+        <SummaryCard
+          title="Business details"
+          onEdit={() => { setCurrentStep(2); setCurrentSubStep(0); }}
+          rows={[
+            { label: "Business category", value: bd.businessCategory },
+            { label: "Business sub-category", value: bd.businessSubCategory },
+            { label: "Merchant DBA name", value: bd.merchantDbaName },
+            { label: "Nature of business", value: bd.businessNature },
+            { label: "Annual turnover", value: bd.annualTurnover },
+            { label: "Business model", value: bd.businessModel },
+            { label: "Accept payments", value: bd.paymentMode },
+            ...(bd.websiteAppLink ? [{ label: "Website / App link", value: bd.websiteAppLink }] : []),
+          ]}
+        />
+
+        <SummaryCard
+          title="Company documents"
+          onEdit={() => { setCurrentStep(2); setCurrentSubStep(1); }}
+          rows={[
+            ...(cd.hasGst
+              ? [{ label: "GST number", value: cd.gstNumber }]
+              : [{ label: "GST", value: "Non-GST declaration provided" }]),
+            { label: "CIN", value: cd.cin },
+          ]}
+        />
+
+        <SummaryCard
+          title="Business address"
+          onEdit={() => { setCurrentStep(2); setCurrentSubStep(2); }}
+          rows={[
+            { label: "Address line 1", value: ba.regAddressLine1 },
+            { label: "Address line 2", value: ba.regAddressLine2 },
+            { label: "City", value: ba.regCity },
+            { label: "State", value: ba.regState },
+            { label: "Pincode", value: ba.regPincode },
+          ]}
+        />
+
+        <SummaryCard
+          title="Signatory details"
+          onEdit={() => setCurrentStep(3)}
+          rows={[
+            { label: "Full name", value: sig.name },
+            { label: "Designation", value: sig.designation },
+            { label: "PAN", value: sig.pan },
+            { label: "Email", value: sig.email },
+          ]}
+        />
+
+        <SummaryCard
+          title="Bank account"
+          onEdit={() => setCurrentStep(4)}
+          rows={[
+            { label: "Account number", value: bank.accountNumber },
+            { label: "IFSC code", value: bank.ifsc },
+          ]}
+        />
+      </section>
+    );
+  }
+
   function renderStepContent() {
     switch (currentStep) {
       case 0:
@@ -1539,16 +1708,18 @@ export default function Home() {
         return renderSignatory();
       case 4:
         return renderBank();
+      case 5:
+        return renderSummary();
     }
   }
 
   // ── Display step number ──
 
   const displayStep = currentStep + 1;
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen bg-accent">
       <Header />
 
       <div className="relative z-10 mx-auto max-w-[1080px] px-4 pt-6 pb-0">
@@ -1563,9 +1734,25 @@ export default function Home() {
                 currentStep={displayStep}
                 totalSteps={totalSteps}
                 title={stepTitle}
-                onPrevious={isFirstStep ? undefined : handlePrevious}
-                onNext={currentStep === 0 ? handleCkycrSubmit : isLastStep ? handleSubmit : handleNext}
-                nextLabel={currentStep === 0 ? "Continue" : undefined}
+                subtitle={isSummaryStep ? "Final step" : undefined}
+                onPrevious={isFirstStep || isSummaryStep ? undefined : handlePrevious}
+                onNext={
+                  kycSubmitted
+                    ? undefined
+                    : currentStep === 0
+                    ? handleCkycrSubmit
+                    : isSummaryStep
+                    ? handleSubmit
+                    : handleNext
+                }
+                nextLabel={
+                  currentStep === 0
+                    ? "Continue"
+                    : isSummaryStep
+                    ? "Submit for verification"
+                    : undefined
+                }
+                hidePrevious={isSummaryStep || kycSubmitted}
               />
 
               {renderStepContent()}
