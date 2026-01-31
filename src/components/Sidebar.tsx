@@ -26,7 +26,7 @@ export default function Sidebar({ steps }: SidebarProps) {
     <aside className="w-[268px] shrink-0 p-4">
       <ul className="space-y-3">
         {steps.map((step) => {
-          if (!step.completed) stepNumber++;
+          stepNumber++;
 
           return (
             <li key={step.label}>
@@ -41,7 +41,7 @@ export default function Sidebar({ steps }: SidebarProps) {
                     <Check size={12} weight="bold" className="text-white" />
                   </span>
                 ) : (
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-medium text-white">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
                     {stepNumber}
                   </span>
                 )}

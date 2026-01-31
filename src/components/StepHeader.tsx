@@ -6,6 +6,7 @@ interface StepHeaderProps {
   title: string;
   onPrevious?: () => void;
   onNext?: () => void;
+  nextLabel?: string;
 }
 
 export default function StepHeader({
@@ -14,16 +15,17 @@ export default function StepHeader({
   title,
   onPrevious,
   onNext,
+  nextLabel,
 }: StepHeaderProps) {
   const isLast = currentStep === totalSteps;
 
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <p className="text-sm text-stone-500 mb-1">
+        <p className="text-sm text-muted-foreground mb-1">
           Step {currentStep} of {totalSteps}
         </p>
-        <h1 className="text-xl font-bold text-stone-900">{title}</h1>
+        <h1 className="text-xl font-bold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-3">
         <Button
@@ -35,7 +37,7 @@ export default function StepHeader({
           Previous
         </Button>
         <Button className="w-24" onClick={onNext}>
-          {isLast ? "Submit" : "Next"}
+          {nextLabel || (isLast ? "Submit" : "Next")}
         </Button>
       </div>
     </div>

@@ -12,14 +12,14 @@ export default function Breadcrumb() {
               <CaretRight
                 size={16}
                 weight="bold"
-                className="text-stone-400"
+                className="text-muted-foreground"
               />
             )}
             <span
               className={
                 i === items.length - 1
-                  ? "font-medium text-stone-900"
-                  : "text-stone-500 hover:text-stone-700 cursor-pointer"
+                  ? "font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground cursor-pointer"
               }
             >
               {item}

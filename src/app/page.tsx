@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import Breadcrumb from "@/components/Breadcrumb";
 import Sidebar, { Step } from "@/components/Sidebar";
 import StepHeader from "@/components/StepHeader";
 import FileUploadField from "@/components/FileUploadField";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -18,10 +29,12 @@ import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 import {
   Buildings,
   IdentificationCard,
@@ -44,6 +57,12 @@ import {
   CreditCard,
   Notepad,
   Warning,
+  Handshake,
+  Scales,
+  Shield,
+  Building,
+  Users,
+  Calendar,
 } from "@phosphor-icons/react";
 
 // ── Validation utilities ──
@@ -184,7 +203,17 @@ interface BankData {
   ifsc: string;
 }
 
+interface CkycrData {
+  pan: string;
+  companyType: string;
+  mobileNumber: string;
+  otp: string[];
+  dateOfIncorporation: string;
+  consent: boolean;
+}
+
 interface FormData {
+  ckycr: CkycrData;
   getStarted: GetStartedData;
   businessDetails: BusinessDetailsData;
   companyDocuments: CompanyDocumentsData;
@@ -196,6 +225,14 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
+  ckycr: {
+    pan: "",
+    companyType: "",
+    mobileNumber: "",
+    otp: ["", "", "", "", "", ""],
+    dateOfIncorporation: "",
+    consent: false,
+  },
   getStarted: { phone: "", registrationType: "", pan: "" },
   businessDetails: {
     businessCategory: "",
@@ -255,6 +292,44 @@ const initialFormData: FormData = {
   bank: { accountNumber: "", ifsc: "" },
 };
 
+// ── CKYCr helpers ──
+
+function getCompanyTypeFromPAN(pan: string): string {
+  if (pan.length < 4) return "";
+  const char = pan[3].toUpperCase();
+  const map: Record<string, string> = {
+    P: "individual",
+    F: "partnership",
+    C: "pvt_ltd",
+    T: "trust",
+    A: "society",
+    H: "individual",
+  };
+  return map[char] || "";
+}
+
+const COMPANY_TYPE_TO_REGISTRATION: Record<string, string> = {
+  individual: "sole_proprietorship",
+  partnership: "partnership",
+  llp: "llp",
+  trust: "trust",
+  pvt_ltd: "pvt_ltd",
+  public_ltd: "public_ltd",
+  society: "trust",
+  sole_prop: "sole_proprietorship",
+};
+
+const COMPANY_TYPE_OPTIONS = [
+  { value: "individual", label: "Individual", icon: User },
+  { value: "partnership", label: "Partnership", icon: Handshake },
+  { value: "llp", label: "LLP", icon: Scales },
+  { value: "trust", label: "Trust", icon: Shield },
+  { value: "pvt_ltd", label: "Private Ltd.", icon: Buildings },
+  { value: "public_ltd", label: "Public Ltd.", icon: Building },
+  { value: "society", label: "Society", icon: Users },
+  { value: "sole_prop", label: "Sole Prop.", icon: Storefront },
+];
+
 // ── Helpers ──
 
 function countFilled(obj: object): number {
@@ -268,6 +343,7 @@ function countTotal(obj: object): number {
 }
 
 const STEP_TITLES = [
+  "Auto verify using CKYCr",
   "Get started",
   "Verify your business",
   "Signatory details",
@@ -335,7 +411,7 @@ function TextField({
         />
         {verification === "verified" && (
           <InputGroupAddon align="inline-end">
-            <CheckCircle size={16} weight="fill" className="text-emerald-600" />
+            <CheckCircle size={16} weight="fill" className="text-primary" />
           </InputGroupAddon>
         )}
         {verification === "error" && (
@@ -428,6 +504,22 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState(0);
   const [currentSubStep, setCurrentSubStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [ckycrModalState, setCkycrModalState] = useState<"idle" | "loading" | "results">("idle");
+  const [ckycrFetchedData, setCkycrFetchedData] = useState<Record<string, string> | null>(null);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  const startOtpTimer = useCallback(() => {
+    setOtpSent(true);
+    setOtpTimer(59);
+  }, []);
+
+  useEffect(() => {
+    if (otpTimer <= 0) return;
+    const id = setTimeout(() => setOtpTimer((t) => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [otpTimer]);
 
   // ── Updaters ──
 
@@ -445,10 +537,10 @@ export default function Home() {
   // ── Navigation ──
 
   const isFirstStep = currentStep === 0;
-  const isLastStep = currentStep === 3;
+  const isLastStep = currentStep === 4;
 
   function handleNext() {
-    if (currentStep === 1) {
+    if (currentStep === 2) {
       if (currentSubStep < 4) {
         setCurrentSubStep((s) => s + 1);
         return;
@@ -456,23 +548,94 @@ export default function Home() {
     }
     if (!isLastStep) {
       setCurrentStep((s) => s + 1);
-      if (currentStep + 1 === 1) setCurrentSubStep(0);
+      if (currentStep + 1 === 2) setCurrentSubStep(0);
     }
   }
 
   function handlePrevious() {
-    if (currentStep === 1 && currentSubStep > 0) {
+    if (currentStep === 2 && currentSubStep > 0) {
       setCurrentSubStep((s) => s - 1);
       return;
     }
     if (!isFirstStep) {
       setCurrentStep((s) => s - 1);
-      if (currentStep - 1 === 1) setCurrentSubStep(4);
+      if (currentStep - 1 === 2) setCurrentSubStep(4);
     }
   }
 
   function handleSubmit() {
     alert("KYC form submitted!");
+  }
+
+  // ── CKYCr handlers ──
+
+  function handleCkycrSubmit() {
+    const d = formData.ckycr;
+    if (!isValidPAN(d.pan)) return;
+    if (!d.companyType) return;
+    if (!d.consent) return;
+    if (d.companyType === "individual") {
+      if (!isValidPhone(d.mobileNumber)) return;
+      if (d.otp.some((digit) => !digit)) return;
+    } else {
+      if (!d.dateOfIncorporation) return;
+    }
+
+    setCkycrModalState("loading");
+    setTimeout(() => {
+      setCkycrFetchedData({
+        "Business Name": "Acme Technologies Pvt. Ltd.",
+        "PAN": d.pan,
+        "Registration Number": "U72200MH2020PTC345678",
+        "Date of Incorporation": d.companyType === "individual" ? "01/01/1990" : d.dateOfIncorporation,
+        "Registered Address": "42, MG Road, Fort",
+        "City": "Mumbai",
+        "State": "Maharashtra",
+        "Pincode": "400001",
+        "Signatory Name": "Rajesh Kumar",
+        "Signatory Email": "rajesh@acmetech.in",
+        "Signatory Designation": "Director",
+        "Phone": d.companyType === "individual" ? d.mobileNumber : "9876543210",
+      });
+      setCkycrModalState("results");
+    }, 3000);
+  }
+
+  function handleCkycrConfirm() {
+    if (!ckycrFetchedData) return;
+    setFormData((prev) => ({
+      ...prev,
+      getStarted: {
+        ...prev.getStarted,
+        pan: ckycrFetchedData["PAN"] || prev.getStarted.pan,
+        phone: ckycrFetchedData["Phone"] || prev.getStarted.phone,
+        registrationType: COMPANY_TYPE_TO_REGISTRATION[prev.ckycr.companyType] || prev.getStarted.registrationType,
+      },
+      businessDetails: {
+        ...prev.businessDetails,
+        merchantDbaName: ckycrFetchedData["Business Name"] || prev.businessDetails.merchantDbaName,
+      },
+      companyDocuments: {
+        ...prev.companyDocuments,
+        cin: ckycrFetchedData["Registration Number"] || prev.companyDocuments.cin,
+      },
+      businessAddress: {
+        ...prev.businessAddress,
+        regAddressLine1: ckycrFetchedData["Registered Address"] || prev.businessAddress.regAddressLine1,
+        regCity: ckycrFetchedData["City"] || prev.businessAddress.regCity,
+        regState: (ckycrFetchedData["State"] || "").toLowerCase().replace(/\s+/g, "_") || prev.businessAddress.regState,
+        regPincode: ckycrFetchedData["Pincode"] || prev.businessAddress.regPincode,
+      },
+      signatory: {
+        ...prev.signatory,
+        name: ckycrFetchedData["Signatory Name"] || prev.signatory.name,
+        email: ckycrFetchedData["Signatory Email"] || prev.signatory.email,
+        designation: ckycrFetchedData["Signatory Designation"] || prev.signatory.designation,
+      },
+    }));
+    setCkycrModalState("idle");
+    setCkycrFetchedData(null);
+    setCurrentStep(1);
   }
 
   // ── Sidebar steps computation ──
@@ -518,17 +681,22 @@ export default function Home() {
 
     return [
       {
-        label: "Get started",
-        completed: step1Complete && currentStep > 0,
+        label: "Centralised KYC",
+        completed: currentStep > 0,
         active: currentStep === 0,
       },
       {
-        label: "Verify your business",
-        completed: step2Complete && currentStep > 1,
+        label: "Get started",
+        completed: step1Complete && currentStep > 1,
         active: currentStep === 1,
+      },
+      {
+        label: "Verify your business",
+        completed: step2Complete && currentStep > 2,
+        active: currentStep === 2,
         hasSubSteps: true,
         subSteps:
-          currentStep === 1
+          currentStep === 2
             ? [
                 { label: "Business details", completed: bdFilled, total: bdTotal, active: currentSubStep === 0 },
                 { label: "Company documents", completed: cdFilled, total: cdTotal, active: currentSubStep === 1 },
@@ -540,13 +708,13 @@ export default function Home() {
       },
       {
         label: "Signatory details",
-        completed: step3Complete && currentStep > 2,
-        active: currentStep === 2,
+        completed: step3Complete && currentStep > 3,
+        active: currentStep === 3,
       },
       {
         label: "Bank account verification",
-        completed: step4Complete && currentStep > 3,
-        active: currentStep === 3,
+        completed: step4Complete && currentStep > 4,
+        active: currentStep === 4,
       },
     ];
   }, [formData, currentStep, currentSubStep]);
@@ -556,6 +724,219 @@ export default function Home() {
   const stepTitle = STEP_TITLES[currentStep];
 
   // ── Step content renderers ──
+
+  function renderCkycr() {
+    const d = formData.ckycr;
+    const panVerification = getVerification(d.pan, isValidPAN);
+
+    function handlePanChange(value: string) {
+      const upper = value.toUpperCase();
+      updateField("ckycr", "pan", upper);
+      const detected = getCompanyTypeFromPAN(upper);
+      if (detected) {
+        updateField("ckycr", "companyType", detected);
+      }
+    }
+
+    function handleOtpChange(index: number, value: string) {
+      if (value.length > 1) value = value[value.length - 1];
+      if (value && !/^\d$/.test(value)) return;
+      const newOtp = [...d.otp];
+      newOtp[index] = value;
+      setFormData((prev) => ({
+        ...prev,
+        ckycr: { ...prev.ckycr, otp: newOtp },
+      }));
+      if (value && index < 5) {
+        otpRefs.current[index + 1]?.focus();
+      }
+    }
+
+    function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+      if (e.key === "Backspace" && !d.otp[index] && index > 0) {
+        otpRefs.current[index - 1]?.focus();
+      }
+    }
+
+    return (
+      <section className="space-y-8">
+        {/* PAN Section */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">Verify your PAN</h3>
+          <TextField
+            label="Business PAN"
+            value={d.pan}
+            onChange={handlePanChange}
+            placeholder="ABCDE1234F"
+            icon={<IdentificationCard size={16} />}
+            kbd="A-Z 0-9"
+            verification={panVerification}
+            error={
+              panVerification === "verified"
+                ? undefined
+                : getValidationError(d.pan, isValidPAN, "PAN must be 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)")
+            }
+          />
+          {panVerification === "verified" && (
+            <p className="text-xs text-muted-foreground -mt-2">
+              PAN Verified
+            </p>
+          )}
+        </div>
+
+        {/* Company Type Section */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">Type of your company</h3>
+          <div className="grid grid-cols-4 gap-3">
+            {COMPANY_TYPE_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isSelected = d.companyType === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => updateField("ckycr", "companyType", opt.value)}
+                  className={`flex h-9 items-center gap-2.5 rounded-lg border px-3 text-sm font-medium transition-colors ${
+                    isSelected
+                      ? "border-primary bg-secondary text-primary"
+                      : "border-border bg-card text-muted-foreground hover:border-ring"
+                  }`}
+                >
+                  <Icon size={16} weight={isSelected ? "fill" : "regular"} className="shrink-0" />
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Conditional Verification */}
+        {d.companyType && (
+          <div className="space-y-4">
+            {d.companyType === "individual" ? (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                <div>
+                  <Field data-invalid={getVerification(d.mobileNumber, isValidPhone) === "error" || undefined}>
+                    <FieldLabel>Mobile number</FieldLabel>
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <Kbd>+91</Kbd>
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        type="tel"
+                        value={d.mobileNumber}
+                        onChange={(e) => updateField("ckycr", "mobileNumber", e.target.value)}
+                        placeholder="10 digit mobile number"
+                        aria-invalid={getVerification(d.mobileNumber, isValidPhone) === "error"}
+                      />
+                      <InputGroupAddon align="inline-end">
+                        {!otpSent && isValidPhone(d.mobileNumber) && (
+                          <InputGroupButton
+                            variant="ghost"
+                            size="xs"
+                            className="text-primary font-semibold hover:text-primary"
+                            style={{ fontSize: "14px" }}
+                            onClick={startOtpTimer}
+                          >
+                            Send OTP
+                          </InputGroupButton>
+                        )}
+                        {otpSent && otpTimer > 0 && (
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            Resend in {otpTimer}s
+                          </span>
+                        )}
+                        {otpSent && otpTimer === 0 && (
+                          <InputGroupButton
+                            variant="ghost"
+                            size="xs"
+                            className="text-primary font-semibold hover:text-primary"
+                            style={{ fontSize: "14px" }}
+                            onClick={startOtpTimer}
+                          >
+                            Resend OTP
+                          </InputGroupButton>
+                        )}
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {getValidationError(d.mobileNumber, isValidPhone, "Enter a valid 10-digit mobile number") && (
+                      <FieldError>{getValidationError(d.mobileNumber, isValidPhone, "Enter a valid 10-digit mobile number")}</FieldError>
+                    )}
+                  </Field>
+                </div>
+                {otpSent && (
+                  <div className="min-w-0">
+                    <label className="block text-sm font-medium text-foreground mb-2">Enter OTP</label>
+                    <div className="flex gap-2">
+                      {d.otp.map((digit, i) => (
+                        <input
+                          key={i}
+                          ref={(el) => { otpRefs.current[i] = el; }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleOtpChange(i, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                          className="h-10 min-w-0 flex-1 rounded-md border border-input bg-transparent text-foreground text-center text-sm font-medium focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Field>
+                <FieldLabel>Date of incorporation</FieldLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm",
+                        d.dateOfIncorporation ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar size={16} className="shrink-0 text-muted-foreground" />
+                      {d.dateOfIncorporation
+                        ? new Date(d.dateOfIncorporation).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                        : "Pick a date"}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={d.dateOfIncorporation ? new Date(d.dateOfIncorporation) : undefined}
+                      onSelect={(date) =>
+                        updateField("ckycr", "dateOfIncorporation", date ? date.toISOString().split("T")[0] : "")
+                      }
+                      disabled={(date) => date > new Date()}
+                      captionLayout="dropdown"
+                      startMonth={new Date(1950, 0)}
+                      endMonth={new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </Field>
+            )}
+          </div>
+        )}
+
+        {/* Consent */}
+        <label className="flex items-center gap-2.5 cursor-pointer">
+          <Checkbox
+            checked={d.consent}
+            onCheckedChange={(checked) =>
+              updateField("ckycr", "consent", checked === true)
+            }
+          />
+          <span className="text-sm text-foreground">
+            I give my consent to fetch & share my details with the central KYC registry.
+          </span>
+        </label>
+      </section>
+    );
+  }
 
   function renderGetStarted() {
     const d = formData.getStarted;
@@ -720,7 +1101,7 @@ export default function Home() {
               updateField("companyDocuments", "hasGst", checked === true)
             }
           />
-          <span className="text-sm text-stone-700">I have a GST number</span>
+          <span className="text-sm text-foreground">I have a GST number</span>
         </label>
 
         <div className="grid grid-cols-2 gap-x-4 gap-y-6">
@@ -802,7 +1183,7 @@ export default function Home() {
     const d = formData.businessAddress;
     return (
       <section className="space-y-6">
-        <h3 className="text-sm font-semibold text-stone-800">Registered address</h3>
+        <h3 className="text-sm font-semibold text-foreground">Registered address</h3>
         <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <div className="col-span-2">
             <TextField
@@ -852,12 +1233,12 @@ export default function Home() {
               updateField("businessAddress", "sameAsRegistered", checked === true)
             }
           />
-          <span className="text-sm text-stone-700">Communication address is the same as registered address</span>
+          <span className="text-sm text-foreground">Communication address is the same as registered address</span>
         </label>
 
         {!d.sameAsRegistered && (
           <>
-            <h3 className="text-sm font-semibold text-stone-800 pt-2">Communication address</h3>
+            <h3 className="text-sm font-semibold text-foreground pt-2">Communication address</h3>
             <div className="grid grid-cols-2 gap-x-4 gap-y-6">
               <div className="col-span-2">
                 <TextField
@@ -909,7 +1290,7 @@ export default function Home() {
     const d = formData.categoryDocs;
     return (
       <section>
-        <p className="mb-5 text-sm text-stone-500">
+        <p className="mb-5 text-sm text-muted-foreground">
           Depending on the category and sub-category type, additional documents may be required.
         </p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-6">
@@ -993,7 +1374,7 @@ export default function Home() {
     const d = formData.signatory;
     return (
       <section className="space-y-6">
-        <h3 className="text-sm font-semibold text-stone-800">Authorised signatory details</h3>
+        <h3 className="text-sm font-semibold text-foreground">Authorised signatory details</h3>
         <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           <TextField
             label="Full name"
@@ -1032,7 +1413,7 @@ export default function Home() {
           />
         </div>
 
-        <h3 className="text-sm font-semibold text-stone-800 pt-2">Proof of address</h3>
+        <h3 className="text-sm font-semibold text-foreground pt-2">Proof of address</h3>
         <SelectField
           label="Document type"
           value={d.proofType}
@@ -1137,8 +1518,10 @@ export default function Home() {
   function renderStepContent() {
     switch (currentStep) {
       case 0:
-        return renderGetStarted();
+        return renderCkycr();
       case 1:
+        return renderGetStarted();
+      case 2:
         switch (currentSubStep) {
           case 0:
             return renderBusinessDetails();
@@ -1152,9 +1535,9 @@ export default function Home() {
             return renderPep();
         }
         break;
-      case 2:
-        return renderSignatory();
       case 3:
+        return renderSignatory();
+      case 4:
         return renderBank();
     }
   }
@@ -1162,16 +1545,16 @@ export default function Home() {
   // ── Display step number ──
 
   const displayStep = currentStep + 1;
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   return (
-    <div className="relative min-h-screen bg-stone-50">
+    <div className="relative min-h-screen bg-background">
       <Header />
 
       <div className="relative z-10 mx-auto max-w-[1080px] px-4 pt-6 pb-0">
         <Breadcrumb />
 
-        <div className="relative flex min-h-[calc(100vh-64px-41px-24px)] overflow-hidden rounded-t-xl bg-white shadow-sm">
+        <div className="relative flex min-h-[calc(100vh-64px-41px-24px)] overflow-hidden rounded-t-xl bg-card shadow-sm">
           <Sidebar steps={sidebarSteps} />
 
           <main className="flex-1 p-6">
@@ -1181,7 +1564,8 @@ export default function Home() {
                 totalSteps={totalSteps}
                 title={stepTitle}
                 onPrevious={isFirstStep ? undefined : handlePrevious}
-                onNext={isLastStep ? handleSubmit : handleNext}
+                onNext={currentStep === 0 ? handleCkycrSubmit : isLastStep ? handleSubmit : handleNext}
+                nextLabel={currentStep === 0 ? "Continue" : undefined}
               />
 
               {renderStepContent()}
@@ -1189,6 +1573,50 @@ export default function Home() {
           </main>
         </div>
       </div>
+
+      {/* CKYCr Loading Modal */}
+      <Dialog open={ckycrModalState === "loading"}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Fetching your details from CKYCr</DialogTitle>
+            <DialogDescription>Connecting to CERSAI...</DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-primary animate-progress-bar" />
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Don&apos;t refresh or close this page while we fetch your details.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* CKYCr Results Modal */}
+      <Dialog open={ckycrModalState === "results"} onOpenChange={(open) => { if (!open) { setCkycrModalState("idle"); setCkycrFetchedData(null); } }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Details fetched from CKYCr</DialogTitle>
+            <DialogDescription>Review the details below and confirm to auto-fill your KYC form.</DialogDescription>
+          </DialogHeader>
+          <div className="py-2 space-y-2 max-h-[400px] overflow-y-auto">
+            {ckycrFetchedData && Object.entries(ckycrFetchedData).map(([key, value]) => (
+              <div key={key} className="flex justify-between py-1.5 border-b border-border last:border-0">
+                <span className="text-sm text-muted-foreground">{key}</span>
+                <span className="text-sm font-medium text-foreground">{value}</span>
+              </div>
+            ))}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setCkycrModalState("idle"); setCkycrFetchedData(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleCkycrConfirm}>
+              Confirm & Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Teal gradient — full width, sticky bottom */}
       <div
