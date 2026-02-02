@@ -23,10 +23,10 @@ export default function Sidebar({ steps }: SidebarProps) {
   let stepNumber = 0;
 
   return (
-    <aside className="w-[268px] shrink-0 p-4">
+    <aside className="hidden md:block w-[268px] shrink-0 p-4 overflow-y-auto">
       <ul className="space-y-3">
         {steps.map((step) => {
-          if (!step.completed) stepNumber++;
+          stepNumber++;
 
           return (
             <li key={step.label}>
@@ -41,7 +41,7 @@ export default function Sidebar({ steps }: SidebarProps) {
                     <Check size={12} weight="bold" className="text-white" />
                   </span>
                 ) : (
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-medium text-white">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
                     {stepNumber}
                   </span>
                 )}
@@ -104,5 +104,23 @@ export default function Sidebar({ steps }: SidebarProps) {
         })}
       </ul>
     </aside>
+  );
+}
+
+interface MobileStepIndicatorProps {
+  currentStep: number;
+  totalSteps: number;
+  stepTitle: string;
+}
+
+export function MobileStepIndicator({ currentStep, totalSteps, stepTitle }: MobileStepIndicatorProps) {
+  return (
+    <div className="flex md:hidden items-center gap-3 px-4 py-3 border-b border-border">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
+        {currentStep}
+      </span>
+      <span className="text-sm font-medium text-foreground">{stepTitle}</span>
+      <span className="ml-auto text-xs text-muted-foreground">Step {currentStep} of {totalSteps}</span>
+    </div>
   );
 }

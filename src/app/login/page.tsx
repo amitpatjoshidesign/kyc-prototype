@@ -1,115 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  MagnifyingGlass,
-  PenNib,
-  TreeStructure,
-  ChartLine,
-  Receipt,
-  CurrencyCircleDollar,
-  CreditCard,
-  Wallet,
-  Coins,
-  ArrowRight,
-} from "@phosphor-icons/react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-const PRODUCTS = [
-  {
-    category: "DATA",
-    items: [
-      {
-        title: "KYC",
-        description: "Verify individuals or businesses with ease",
-        features: ["Bank account verification", "PAN", "eKYC Setu (for Aadhaar)", "DigiLocker"],
-        icon: MagnifyingGlass,
-        href: "/kyc",
-      },
-      {
-        title: "eSign Gateway",
-        description: "Integrate India's best Aadhaar eSign experience",
-        features: ["Aadhaar eSign", "Digital signatures", "Document workflow"],
-        icon: PenNib,
-        href: "/kyc",
-      },
-      {
-        title: "Account Aggregator",
-        description: "Access financial data with user consent",
-        features: ["Consent management", "Financial data", "Multi-FIP support"],
-        icon: TreeStructure,
-        href: "/kyc",
-      },
-      {
-        title: "Insights",
-        description: "Analysing your customers' financial data, made easy",
-        features: ["Credit scoring", "Risk analysis", "Income verification"],
-        icon: ChartLine,
-        href: "/kyc",
-      },
-    ],
-  },
-  {
-    category: "PAYMENTS",
-    items: [
-      {
-        title: "BBPS",
-        description: "Power payments over BBPS",
-        features: ["BBPS BOU", "BBPS COU"],
-        icon: Receipt,
-        href: "/kyc",
-      },
-      {
-        title: "UPI",
-        description: "Power seamless UPI payment journeys",
-        features: ["Recur", "Deeplinks", "Flash", "Reserve", "Third Party Verification"],
-        icon: CurrencyCircleDollar,
-        href: "/kyc",
-      },
-      {
-        title: "Payment Gateway",
-        description: "Accept online payments with ease",
-        features: ["Cards", "Net banking", "UPI", "Wallets"],
-        icon: CreditCard,
-        href: "/kyc",
-      },
-      {
-        title: "Payouts",
-        description: "Disburse payments at scale",
-        features: ["Bank transfers", "UPI payouts", "Bulk disbursals"],
-        icon: Wallet,
-        href: "/kyc",
-      },
-      {
-        title: "Credit Line",
-        description: "Enable credit for your customers",
-        features: ["Instant approval", "Flexible limits", "EMI options"],
-        icon: Coins,
-        href: "/kyc",
-      },
-    ],
-  },
-];
-
-/* ── Skeleton helpers ── */
 function Skeleton({ className }: { className?: string }) {
   return (
     <div
@@ -120,7 +16,7 @@ function Skeleton({ className }: { className?: string }) {
 
 function FormSkeleton() {
   return (
-    <div className="w-full space-y-6 p-8 md:p-10">
+    <div className="w-full max-w-[380px] space-y-6">
       <Skeleton className="h-8 w-32" />
       <div className="space-y-4">
         <div>
@@ -148,8 +44,8 @@ function FormSkeleton() {
   );
 }
 
-/* ── Login overlay content ── */
-function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
+export default function LoginPage() {
+  const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -157,6 +53,13 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (
+      stored === "dark" ||
+      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+      document.documentElement.classList.add("dark");
+    }
     const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
@@ -164,29 +67,31 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     localStorage.setItem("bridge_auth", "true");
-    onSuccess();
+    router.push("/");
   }
 
   function handleSocialLogin() {
     localStorage.setItem("bridge_auth", "true");
-    onSuccess();
+    router.push("/");
   }
 
   return (
-    <div className="flex min-h-[520px] max-h-[90vh]">
+    <div className="flex min-h-screen">
       {/* Left panel — dark brand area */}
-      <div className="hidden lg:flex lg:w-[380px] shrink-0 relative bg-[#1a1a2e] items-end overflow-hidden rounded-l-lg">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#1a1a2e] items-end overflow-hidden">
+        {/* Gradient accent bar at top */}
         <div
           className="absolute top-0 left-0 right-0 h-1"
           style={{
             background: "linear-gradient(90deg, #009CB0 0%, #D5FFFF 100%)",
           }}
         />
-        <div className="relative z-10 p-10 pb-12">
+        {/* Brand content */}
+        <div className="relative z-10 p-12 pb-16">
           <div className="flex items-center gap-2.5 mb-6">
             <svg
-              width={28}
-              height={28}
+              width={32}
+              height={32}
               viewBox="0 0 32 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -198,9 +103,9 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
                 fill="white"
               />
             </svg>
-            <span className="text-lg font-semibold text-white">Bridge</span>
+            <span className="text-xl font-semibold text-white">Bridge</span>
           </div>
-          <h2 className="text-xl font-bold text-white mb-3">
+          <h2 className="text-2xl font-bold text-white mb-3">
             KYC &amp; Onboarding
           </h2>
           <p className="text-sm text-white/60 max-w-sm leading-relaxed">
@@ -208,6 +113,7 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
             KYC platform. Fast, secure, and compliant.
           </p>
         </div>
+        {/* Decorative gradient blob */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
@@ -219,16 +125,16 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center bg-card p-6 md:p-12">
         {loading ? (
           <FormSkeleton />
         ) : (
-          <div className="w-full max-w-[380px] p-8 md:p-10">
+          <div className="w-full max-w-[380px]">
             {/* Mobile logo */}
-            <div className="flex lg:hidden items-center gap-2 mb-6">
+            <div className="flex lg:hidden items-center gap-2 mb-8">
               <svg
-                width={24}
-                height={24}
+                width={28}
+                height={28}
                 viewBox="0 0 32 32"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -241,13 +147,14 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
                   fill="currentColor"
                 />
               </svg>
-              <span className="text-base font-semibold text-foreground">Bridge</span>
+              <span className="text-lg font-semibold text-foreground">Bridge</span>
             </div>
 
-            <h1 className="text-xl font-bold text-foreground mb-5">
+            <h1 className="text-2xl font-bold text-foreground mb-6">
               {isSignUp ? "Sign up" : "Sign in"}
             </h1>
 
+            {/* Email form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -285,13 +192,15 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
                 </div>
               )}
 
-              <div className="relative !my-5">
+              {/* Divider */}
+              <div className="relative !my-6">
                 <Separator />
-                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs uppercase text-muted-foreground tracking-wider">
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs uppercase text-muted-foreground tracking-wider">
                   or
                 </span>
               </div>
 
+              {/* Social buttons */}
               <div className="space-y-3">
                 <button
                   type="button"
@@ -334,19 +243,20 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
                 </button>
               </div>
 
-              <Button type="submit" className="w-full !mt-5">
+              <Button type="submit" className="w-full !mt-6">
                 {isSignUp ? "Sign up" : "Sign in"}
               </Button>
             </form>
 
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-4 text-xs text-muted-foreground">
               By signing up you are agreeing to our{" "}
               <span className="text-primary cursor-pointer hover:underline">
                 terms &amp; conditions
               </span>
             </p>
 
-            <p className="mt-5 text-center text-sm text-muted-foreground">
+            {/* Toggle */}
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
               <button
                 type="button"
@@ -359,130 +269,6 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-/* ── Home page ── */
-export default function HomePage() {
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const pendingHref = useRef<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  function handleStartClick(href: string) {
-    const auth = localStorage.getItem("bridge_auth");
-    if (auth) {
-      router.push(href);
-    } else {
-      pendingHref.current = href;
-      setLoginOpen(true);
-    }
-  }
-
-  function handleLoginSuccess() {
-    setLoginOpen(false);
-    const href = pendingHref.current ?? "/kyc";
-    pendingHref.current = null;
-    router.push(href);
-  }
-
-  if (!mounted) return null;
-
-  return (
-    <div className="relative min-h-screen bg-accent">
-      <Header />
-
-      <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Products</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Choose a product to get started with Bridge
-          </p>
-        </div>
-
-        {PRODUCTS.map((group) => (
-          <div key={group.category} className="mb-10">
-            <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">
-              {group.category}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {group.items.map((product) => {
-                const Icon = product.icon;
-                return (
-                  <Card
-                    key={product.title}
-                    className="flex flex-col transition-shadow hover:shadow-md"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                          <Icon size={20} weight="duotone" className="text-primary" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-base">{product.title}</CardTitle>
-                          <CardDescription className="mt-1">
-                            {product.description}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-1">
-                      <ul className="space-y-1">
-                        {product.features.map((f) => (
-                          <li
-                            key={f}
-                            className="text-xs text-muted-foreground"
-                          >
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    <CardFooter>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full gap-2"
-                        onClick={() => handleStartClick(product.href)}
-                      >
-                        Start
-                        <ArrowRight size={14} weight="bold" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Teal gradient */}
-      <div
-        aria-hidden
-        className="pointer-events-none sticky bottom-0 -z-10 h-[640px] w-full -mt-[640px]"
-        style={{
-          opacity: 0.3,
-          background:
-            "linear-gradient(5deg, #009CB0 -31.37%, #009CB0 0.52%, #D5FFFF 96.2%)",
-          filter: "blur(47.6px)",
-        }}
-      />
-
-      {/* Login overlay */}
-      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="max-w-[860px] p-0 gap-0 overflow-hidden">
-          <VisuallyHidden>
-            <DialogTitle>Sign in to Bridge</DialogTitle>
-          </VisuallyHidden>
-          <LoginOverlay onSuccess={handleLoginSuccess} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
