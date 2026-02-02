@@ -57,6 +57,8 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --sidebar-accent: 20 6% 15%;
+    --sidebar-accent-foreground: 30 6% 96%;
   }
 }
 
@@ -75,4 +77,12 @@
 }
 .animate-progress-bar {
   animation: progress-bar 3s ease-in-out forwards;
+}
+
+@keyframes gradient-breathe {
+  0%, 100% { opacity: 0.45; transform: rotate(180deg) scale(1); }
+  50% { opacity: 0.95; transform: rotate(180deg) scale(1.1); }
+}
+.animate-gradient-breathe {
+  animation: gradient-breathe 6s ease-in-out infinite;
 }
