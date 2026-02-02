@@ -4,7 +4,7 @@ const items = ["Home", "UPI", "KYC", "Manual KYC"];
 
 export default function Breadcrumb() {
   return (
-    <nav className="py-3">
+    <nav className="hidden md:block py-3">
       <ol className="flex items-center gap-1.5 text-sm">
         {items.map((item, i) => (
           <li key={item} className="flex items-center gap-1.5">

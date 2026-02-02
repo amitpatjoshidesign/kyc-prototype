@@ -23,7 +23,7 @@ export default function Sidebar({ steps }: SidebarProps) {
   let stepNumber = 0;
 
   return (
-    <aside className="w-[268px] shrink-0 p-4">
+    <aside className="hidden md:block w-[268px] shrink-0 p-4">
       <ul className="space-y-3">
         {steps.map((step) => {
           stepNumber++;
@@ -104,5 +104,23 @@ export default function Sidebar({ steps }: SidebarProps) {
         })}
       </ul>
     </aside>
+  );
+}
+
+interface MobileStepIndicatorProps {
+  currentStep: number;
+  totalSteps: number;
+  stepTitle: string;
+}
+
+export function MobileStepIndicator({ currentStep, totalSteps, stepTitle }: MobileStepIndicatorProps) {
+  return (
+    <div className="flex md:hidden items-center gap-3 px-4 py-3 border-b border-border">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
+        {currentStep}
+      </span>
+      <span className="text-sm font-medium text-foreground">{stepTitle}</span>
+      <span className="ml-auto text-xs text-muted-foreground">Step {currentStep} of {totalSteps}</span>
+    </div>
   );
 }

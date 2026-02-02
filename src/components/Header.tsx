@@ -29,7 +29,7 @@ export default function Header() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between px-6">
+    <header className="flex h-16 items-center justify-between px-4 md:px-6">
       {/* Logo */}
       <div className="flex items-center gap-2">
         <svg width={28} height={28} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-foreground">
@@ -50,7 +50,7 @@ export default function Header() {
         >
           {dark ? <Sun size={16} weight="bold" /> : <Moon size={16} weight="bold" />}
         </button>
-        <span className="text-sm text-muted-foreground">rahul@example.com</span>
+        <span className="hidden md:inline text-sm text-muted-foreground">rahul@example.com</span>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-sm font-medium text-secondary-foreground">
           R
         </div>
