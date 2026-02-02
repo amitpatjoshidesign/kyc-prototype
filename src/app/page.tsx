@@ -29,44 +29,12 @@ import {
   CreditCard,
   Wallet,
   Coins,
-  ArrowRight,
+  Warning,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const PRODUCTS = [
-  {
-    category: "DATA",
-    items: [
-      {
-        title: "KYC",
-        description: "Verify individuals or businesses with ease",
-        features: ["Bank account verification", "PAN", "eKYC Setu (for Aadhaar)", "DigiLocker"],
-        icon: MagnifyingGlass,
-        href: "/kyc",
-      },
-      {
-        title: "eSign Gateway",
-        description: "Integrate India's best Aadhaar eSign experience",
-        features: ["Aadhaar eSign", "Digital signatures", "Document workflow"],
-        icon: PenNib,
-        href: "/kyc",
-      },
-      {
-        title: "Account Aggregator",
-        description: "Access financial data with user consent",
-        features: ["Consent management", "Financial data", "Multi-FIP support"],
-        icon: TreeStructure,
-        href: "/kyc",
-      },
-      {
-        title: "Insights",
-        description: "Analysing your customers' financial data, made easy",
-        features: ["Credit scoring", "Risk analysis", "Income verification"],
-        icon: ChartLine,
-        href: "/kyc",
-      },
-    ],
-  },
   {
     category: "PAYMENTS",
     items: [
@@ -103,6 +71,39 @@ const PRODUCTS = [
         description: "Enable credit for your customers",
         features: ["Instant approval", "Flexible limits", "EMI options"],
         icon: Coins,
+        href: "/kyc",
+      },
+    ],
+  },
+  {
+    category: "DATA",
+    items: [
+      {
+        title: "KYC",
+        description: "Verify individuals or businesses with ease",
+        features: ["Bank account verification", "PAN", "eKYC Setu (for Aadhaar)", "DigiLocker"],
+        icon: MagnifyingGlass,
+        href: "/kyc",
+      },
+      {
+        title: "eSign Gateway",
+        description: "Integrate India's best Aadhaar eSign experience",
+        features: ["Aadhaar eSign", "Digital signatures", "Document workflow"],
+        icon: PenNib,
+        href: "/kyc",
+      },
+      {
+        title: "Account Aggregator",
+        description: "Access financial data with user consent",
+        features: ["Consent management", "Financial data", "Multi-FIP support"],
+        icon: TreeStructure,
+        href: "/kyc",
+      },
+      {
+        title: "Insights",
+        description: "Analysing your customers' financial data, made easy",
+        features: ["Credit scoring", "Risk analysis", "Income verification"],
+        icon: ChartLine,
         href: "/kyc",
       },
     ],
@@ -164,66 +165,47 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     localStorage.setItem("bridge_auth", "true");
+    if (email) localStorage.setItem("bridge_email", email);
     onSuccess();
   }
 
   function handleSocialLogin() {
     localStorage.setItem("bridge_auth", "true");
+    localStorage.setItem("bridge_email", "user@example.com");
     onSuccess();
   }
 
   return (
     <div className="flex min-h-[520px] max-h-[90vh]">
-      {/* Left panel — dark brand area */}
-      <div className="hidden lg:flex lg:w-[380px] shrink-0 relative bg-[#1a1a2e] items-end overflow-hidden rounded-l-lg">
-        <div
-          className="absolute top-0 left-0 right-0 h-1"
-          style={{
-            background: "linear-gradient(90deg, #009CB0 0%, #D5FFFF 100%)",
-          }}
-        />
-        <div className="relative z-10 p-10 pb-12">
-          <div className="flex items-center gap-2.5 mb-6">
-            <svg
-              width={28}
-              height={28}
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M0 16C0 8.45753 0 4.68629 2.34315 2.34315C4.68629 0 8.45753 0 16 0C23.5425 0 27.3137 0 29.6569 2.34315C32 4.68629 32 8.45753 32 16C32 23.5425 32 27.3137 29.6569 29.6569C27.3137 32 23.5425 32 16 32C8.45753 32 4.68629 32 2.34315 29.6569C0 27.3137 0 23.5425 0 16ZM18.0223 14.8714C17.3694 14.6863 16.6923 14.589 15.9983 14.589C15.2785 14.589 14.5769 14.6937 13.9016 14.8924C10.8292 15.7963 8.29946 18.6452 7.06511 22.4288C6.8191 23.1829 6.6961 23.56 6.9275 23.8098C7.15891 24.0596 7.56431 23.9609 8.37511 23.7634L9.69397 23.4422C10.2182 23.3146 10.4802 23.2508 10.6618 23.0864C10.8434 22.9221 10.9411 22.6448 11.1364 22.0902C11.7931 20.2252 12.7594 18.6085 13.9016 17.8211C14.5517 17.373 15.2588 17.1272 15.9983 17.1272C16.7103 17.1272 17.3923 17.3551 18.0223 17.7721C19.1997 18.5514 20.1954 20.1971 20.8661 22.1072C21.0612 22.6629 21.1588 22.9407 21.3405 23.1053C21.5221 23.2699 21.7846 23.3338 22.3095 23.4616L23.6275 23.7826C24.4373 23.9798 24.8423 24.0784 25.0737 23.829C25.3051 23.5795 25.1827 23.2027 24.938 22.4491C23.6964 18.6256 21.1329 15.7531 18.0223 14.8714ZM15.9993 11.7891C18.7869 11.7891 21.1926 12.3891 22.7131 12.8889C23.5399 13.1607 23.9533 13.2966 24.193 13.1231C24.4327 12.9496 24.4327 12.5351 24.4327 11.706V11.255C24.4327 10.3091 24.4327 9.83619 24.1437 9.50784C23.8547 9.1795 23.3996 9.12124 22.4895 9.00471C18.1633 8.45082 13.8412 8.45212 9.515 9.00518C8.60432 9.1216 8.14898 9.17981 7.85992 9.50817C7.57086 9.83654 7.57086 10.3096 7.57086 11.2558V11.704C7.57086 12.5332 7.57086 12.9477 7.81053 13.1213C8.05019 13.2948 8.46371 13.1589 9.29073 12.8871C10.8099 12.3879 13.2129 11.7891 15.9993 11.7891Z"
-                fill="white"
-              />
-            </svg>
-            <span className="text-lg font-semibold text-white">Bridge</span>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-3">
-            KYC &amp; Onboarding
-          </h2>
-          <p className="text-sm text-white/60 max-w-sm leading-relaxed">
-            Streamline your business verification with India&apos;s most trusted
-            KYC platform. Fast, secure, and compliant.
-          </p>
+      {/* Left panel — teal gradient brand area */}
+      <div
+        className="hidden lg:flex flex-1 relative items-end overflow-hidden rounded-l-lg bg-gradient-to-b from-setu-brand-600 to-setu-brand-900"
+      >
+        <div className="relative z-10 p-10 pb-12 flex items-center gap-2.5">
+          <svg
+            width={28}
+            height={28}
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M0 16C0 8.45753 0 4.68629 2.34315 2.34315C4.68629 0 8.45753 0 16 0C23.5425 0 27.3137 0 29.6569 2.34315C32 4.68629 32 8.45753 32 16C32 23.5425 32 27.3137 29.6569 29.6569C27.3137 32 23.5425 32 16 32C8.45753 32 4.68629 32 2.34315 29.6569C0 27.3137 0 23.5425 0 16ZM18.0223 14.8714C17.3694 14.6863 16.6923 14.589 15.9983 14.589C15.2785 14.589 14.5769 14.6937 13.9016 14.8924C10.8292 15.7963 8.29946 18.6452 7.06511 22.4288C6.8191 23.1829 6.6961 23.56 6.9275 23.8098C7.15891 24.0596 7.56431 23.9609 8.37511 23.7634L9.69397 23.4422C10.2182 23.3146 10.4802 23.2508 10.6618 23.0864C10.8434 22.9221 10.9411 22.6448 11.1364 22.0902C11.7931 20.2252 12.7594 18.6085 13.9016 17.8211C14.5517 17.373 15.2588 17.1272 15.9983 17.1272C16.7103 17.1272 17.3923 17.3551 18.0223 17.7721C19.1997 18.5514 20.1954 20.1971 20.8661 22.1072C21.0612 22.6629 21.1588 22.9407 21.3405 23.1053C21.5221 23.2699 21.7846 23.3338 22.3095 23.4616L23.6275 23.7826C24.4373 23.9798 24.8423 24.0784 25.0737 23.829C25.3051 23.5795 25.1827 23.2027 24.938 22.4491C23.6964 18.6256 21.1329 15.7531 18.0223 14.8714ZM15.9993 11.7891C18.7869 11.7891 21.1926 12.3891 22.7131 12.8889C23.5399 13.1607 23.9533 13.2966 24.193 13.1231C24.4327 12.9496 24.4327 12.5351 24.4327 11.706V11.255C24.4327 10.3091 24.4327 9.83619 24.1437 9.50784C23.8547 9.1795 23.3996 9.12124 22.4895 9.00471C18.1633 8.45082 13.8412 8.45212 9.515 9.00518C8.60432 9.1216 8.14898 9.17981 7.85992 9.50817C7.57086 9.83654 7.57086 10.3096 7.57086 11.2558V11.704C7.57086 12.5332 7.57086 12.9477 7.81053 13.1213C8.05019 13.2948 8.46371 13.1589 9.29073 12.8871C10.8099 12.3879 13.2129 11.7891 15.9993 11.7891Z"
+              fill="white"
+            />
+          </svg>
+          <span className="text-lg font-semibold text-white">Bridge</span>
         </div>
-        <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse at 30% 80%, rgba(0,156,176,0.15) 0%, transparent 60%)",
-          }}
-        />
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center overflow-y-auto">
+      <div className="shrink-0 flex items-center justify-center overflow-y-auto p-8">
         {loading ? (
           <FormSkeleton />
         ) : (
-          <div className="w-full max-w-[380px] p-8 md:p-10">
+          <div className="w-full max-w-[300px] flex flex-col h-full">
             {/* Mobile logo */}
             <div className="flex lg:hidden items-center gap-2 mb-6">
               <svg
@@ -337,24 +319,21 @@ function LoginOverlay({ onSuccess }: { onSuccess: () => void }) {
               <Button type="submit" className="w-full !mt-5">
                 {isSignUp ? "Sign up" : "Sign in"}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="w-full mt-[8px] text-center text-sm font-medium text-primary hover:underline"
+              >
+                {isSignUp ? "Sign in instead" : "Sign up instead"}
+              </button>
             </form>
 
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-auto pt-6 text-center text-xs text-muted-foreground">
               By signing up you are agreeing to our{" "}
               <span className="text-primary cursor-pointer hover:underline">
                 terms &amp; conditions
               </span>
-            </p>
-
-            <p className="mt-5 text-center text-sm text-muted-foreground">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="font-medium text-primary hover:underline"
-              >
-                {isSignUp ? "Sign in" : "Sign up"}
-              </button>
             </p>
           </div>
         )}
@@ -368,10 +347,16 @@ export default function HomePage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [showKycBanner, setShowKycBanner] = useState(false);
   const pendingHref = useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    const started = localStorage.getItem("kyc_started");
+    const completed = localStorage.getItem("kyc_completed");
+    if (started === "true" && completed !== "true") {
+      setShowKycBanner(true);
+    }
   }, []);
 
   function handleStartClick(href: string) {
@@ -394,7 +379,7 @@ export default function HomePage() {
   if (!mounted) return null;
 
   return (
-    <div className="relative min-h-screen bg-accent">
+    <div className="relative min-h-screen bg-background">
       <Header />
 
       <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
@@ -405,74 +390,77 @@ export default function HomePage() {
           </p>
         </div>
 
-        {PRODUCTS.map((group) => (
-          <div key={group.category} className="mb-10">
-            <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">
-              {group.category}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {group.items.map((product) => {
-                const Icon = product.icon;
-                return (
-                  <Card
-                    key={product.title}
-                    className="flex flex-col transition-shadow hover:shadow-md"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start gap-3">
+        {PRODUCTS.map((group, groupIndex) => (
+          <div key={group.category}>
+            <div className="mb-10">
+              <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
+                {group.category}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.items.map((product) => {
+                  const Icon = product.icon;
+                  return (
+                    <Card
+                      key={product.title}
+                      className="flex flex-col shadow-none border-border"
+                    >
+                      <CardHeader className="p-4 pb-2 space-y-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
                           <Icon size={20} weight="duotone" className="text-primary" />
                         </div>
-                        <div>
-                          <CardTitle className="text-base">{product.title}</CardTitle>
-                          <CardDescription className="mt-1">
+                        <div className="space-y-2">
+                          <CardTitle className="text-lg">{product.title}</CardTitle>
+                          <CardDescription>
                             {product.description}
                           </CardDescription>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-1">
-                      <ul className="space-y-1">
-                        {product.features.map((f) => (
-                          <li
-                            key={f}
-                            className="text-xs text-muted-foreground"
-                          >
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    <CardFooter>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full gap-2"
-                        onClick={() => handleStartClick(product.href)}
-                      >
-                        Start
-                        <ArrowRight size={14} weight="bold" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                );
-              })}
+                      </CardHeader>
+                      <CardContent className="flex-1 px-4 pb-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {product.features.map((f) => (
+                            <span
+                              key={f}
+                              className="inline-block rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
+                            >
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => handleStartClick(product.href)}
+                        >
+                          Start using {product.title}
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
+
+            {groupIndex === 0 && showKycBanner && (
+              <div className="mb-10 rounded-lg border-l-4 border-l-primary border border-border bg-secondary p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <Warning size={24} weight="fill" className="text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Your KYC verification is incomplete</p>
+                    <p className="text-sm text-muted-foreground">Continue where you left off</p>
+                  </div>
+                </div>
+                <Link href="/kyc">
+                  <Button size="sm">Continue</Button>
+                </Link>
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Teal gradient */}
-      <div
-        aria-hidden
-        className="pointer-events-none sticky bottom-0 -z-10 h-[640px] w-full -mt-[640px]"
-        style={{
-          opacity: 0.3,
-          background:
-            "linear-gradient(5deg, #009CB0 -31.37%, #009CB0 0.52%, #D5FFFF 96.2%)",
-          filter: "blur(47.6px)",
-        }}
-      />
 
       {/* Login overlay */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>

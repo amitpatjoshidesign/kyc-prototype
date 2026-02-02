@@ -518,6 +518,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    localStorage.setItem("kyc_started", "true");
+  }, []);
+
+  useEffect(() => {
     if (otpTimer <= 0) return;
     const id = setTimeout(() => setOtpTimer((t) => t - 1), 1000);
     return () => clearTimeout(id);
@@ -567,6 +571,7 @@ export default function Home() {
   }
 
   function handleSubmit() {
+    localStorage.setItem("kyc_completed", "true");
     setKycSubmitted(true);
   }
 
@@ -1719,7 +1724,7 @@ export default function Home() {
   const totalSteps = 6;
 
   return (
-    <div className="relative min-h-screen bg-accent">
+    <div className="relative min-h-screen bg-muted/50">
       <Header />
 
       <div className="relative z-10 mx-auto max-w-[1080px] px-0 md:px-4 pt-0 md:pt-6 pb-0">
@@ -1812,15 +1817,18 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Teal gradient — full width, sticky bottom */}
+      {/* Teal gradient — fixed to bottom, matching Figma */}
       <div
         aria-hidden
-        className="pointer-events-none sticky bottom-0 -z-10 h-[640px] w-full -mt-[640px]"
+        className="pointer-events-none fixed -bottom-[80px] -z-10 h-[594px] animate-gradient-breathe"
         style={{
-          opacity: 0.3,
+          width: "130vw",
+          left: "calc(50% - 65vw)",
           background:
-            "linear-gradient(5deg, #009CB0 -31.37%, #009CB0 0.52%, #D5FFFF 96.2%)",
+            "linear-gradient(185.32deg, #0099AD -31.37%, #0099AD 0.52%, #DDFEFF 96.2%)",
+          opacity: 0.3,
           filter: "blur(47.6px)",
+          transform: "rotate(180deg)",
         }}
       />
     </div>
