@@ -1725,38 +1725,44 @@ export default function Home() {
       <div className="relative z-10 mx-auto max-w-[1080px] px-0 md:px-4 pt-0 md:pt-6 pb-0">
         <Breadcrumb />
 
-        <div className="relative flex flex-col md:flex-row min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-64px-41px-24px)] overflow-hidden rounded-none md:rounded-t-xl bg-card shadow-sm">
+        <div className="relative flex flex-col md:flex-row h-[calc(100vh-64px)] md:h-[calc(100vh-64px-41px-24px)] overflow-hidden rounded-none md:rounded-t-xl bg-card shadow-sm">
           <MobileStepIndicator currentStep={displayStep} totalSteps={totalSteps} stepTitle={stepTitle} />
           <Sidebar steps={sidebarSteps} />
 
-          <main className="flex-1 p-4 pb-20 md:p-6">
-            <div className="max-w-full md:max-w-[812px]">
-              <StepHeader
-                currentStep={displayStep}
-                totalSteps={totalSteps}
-                title={stepTitle}
-                subtitle={isSummaryStep ? "Final step" : undefined}
-                onPrevious={isFirstStep || isSummaryStep ? undefined : handlePrevious}
-                onNext={
-                  kycSubmitted
-                    ? undefined
-                    : currentStep === 0
-                    ? handleCkycrSubmit
-                    : isSummaryStep
-                    ? handleSubmit
-                    : handleNext
-                }
-                nextLabel={
-                  currentStep === 0
-                    ? "Continue"
-                    : isSummaryStep
-                    ? "Submit for verification"
-                    : undefined
-                }
-                hidePrevious={isSummaryStep || kycSubmitted}
-              />
+          <main className="flex-1 flex flex-col min-h-0">
+            <div className="shrink-0 px-4 pt-4 md:px-6 md:pt-6">
+              <div className="max-w-full md:max-w-[812px]">
+                <StepHeader
+                  currentStep={displayStep}
+                  totalSteps={totalSteps}
+                  title={stepTitle}
+                  subtitle={isSummaryStep ? "Final step" : undefined}
+                  onPrevious={isFirstStep || isSummaryStep ? undefined : handlePrevious}
+                  onNext={
+                    kycSubmitted
+                      ? undefined
+                      : currentStep === 0
+                      ? handleCkycrSubmit
+                      : isSummaryStep
+                      ? handleSubmit
+                      : handleNext
+                  }
+                  nextLabel={
+                    currentStep === 0
+                      ? "Continue"
+                      : isSummaryStep
+                      ? "Submit for verification"
+                      : undefined
+                  }
+                  hidePrevious={isSummaryStep || kycSubmitted}
+                />
+              </div>
+            </div>
 
-              {renderStepContent()}
+            <div className="flex-1 overflow-y-auto px-4 pb-20 md:px-6 md:pb-6">
+              <div className="max-w-full md:max-w-[812px]">
+                {renderStepContent()}
+              </div>
             </div>
           </main>
         </div>

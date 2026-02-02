@@ -23,7 +23,7 @@ export default function Sidebar({ steps }: SidebarProps) {
   let stepNumber = 0;
 
   return (
-    <aside className="hidden md:block w-[268px] shrink-0 p-4">
+    <aside className="hidden md:block w-[268px] shrink-0 p-4 overflow-y-auto">
       <ul className="space-y-3">
         {steps.map((step) => {
           stepNumber++;
