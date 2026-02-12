@@ -1782,7 +1782,7 @@ export default function Home() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full bg-primary animate-progress-bar" />
+              <div className="h-full rounded-full bg-foreground animate-progress-bar" />
             </div>
             <p className="text-xs text-muted-foreground text-center">
               Don&apos;t refresh or close this page while we fetch your details.

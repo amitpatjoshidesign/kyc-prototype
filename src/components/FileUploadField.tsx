@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { FileText as FileTextIcon, X as XIcon } from "@phosphor-icons/react";
 
 interface FileUploadFieldProps {
@@ -53,8 +53,8 @@ export default function FileUploadField({
   };
 
   return (
-    <div>
-      <Label className="mb-1.5 block">{label}</Label>
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel>{label}</FieldLabel>
       <input
         ref={inputRef}
         type="file"
@@ -64,30 +64,30 @@ export default function FileUploadField({
       />
       <div
         onClick={file ? undefined : handleClick}
-        className={`flex h-9 items-center rounded-md border bg-white px-3 text-sm ${
-          error ? "border-red-400" : "border-stone-300"
-        } ${!file ? "cursor-pointer hover:border-stone-400" : ""}`}
+        className={`flex h-9 items-center rounded-md border bg-white dark:bg-transparent px-3 text-sm ${
+          error ? "border-red-400" : "border-stone-300 dark:border-input"
+        } ${!file ? "cursor-pointer hover:border-stone-400 dark:hover:border-ring" : ""}`}
       >
         {file ? (
           <>
-            <FileTextIcon size={16} className="mr-2 shrink-0 text-stone-400" />
-            <span className="flex-1 truncate text-stone-700">{file.name}</span>
+            <FileTextIcon size={16} className="mr-2 shrink-0 text-muted-foreground" />
+            <span className="flex-1 truncate text-foreground">{file.name}</span>
             <button
               onClick={handleClear}
-              className="ml-2 shrink-0 text-stone-400 hover:text-stone-600 transition-colors"
+              className="ml-2 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
               aria-label={`Remove ${file.name}`}
             >
               <XIcon size={16} />
             </button>
           </>
         ) : (
-          <span className="text-stone-400">Choose file...</span>
+          <span className="text-muted-foreground">Choose file...</span>
         )}
       </div>
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && <FieldError>{error}</FieldError>}
       {!error && helperText && (
-        <p className="mt-1 text-xs text-stone-400">{helperText}</p>
+        <p className="text-xs text-muted-foreground">{helperText}</p>
       )}
-    </div>
+    </Field>
   );
 }

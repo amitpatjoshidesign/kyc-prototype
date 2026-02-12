@@ -30,6 +30,8 @@ import {
   Wallet,
   Coins,
   Warning,
+  ArrowRight,
+  X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -289,6 +291,8 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [showKycBanner, setShowKycBanner] = useState(false);
+  const [filter, setFilter] = useState<"All" | "Payments" | "Data">("All");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const pendingHref = useRef<string | null>(null);
 
   useEffect(() => {
@@ -320,7 +324,7 @@ export default function HomePage() {
   if (!mounted) return null;
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen bg-muted/50">
       <Header showStatus />
 
       <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
@@ -331,7 +335,45 @@ export default function HomePage() {
           </p>
         </div>
 
-        {PRODUCTS.map((group, groupIndex) => (
+        {!bannerDismissed && (
+          <div className="mb-6 rounded-2xl bg-muted p-4 sm:p-6">
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary mb-4">
+              {showKycBanner ? "Action needed" : "Get started"}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+              {showKycBanner ? "Your KYC verification is incomplete" : "Complete KYC to start using products"}
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-lg">
+              {showKycBanner
+                ? "Continue where you left off to activate your products."
+                : "KYC verification is required before you can activate any product."}
+            </p>
+            <Link href="/kyc">
+              <Button size="lg">
+                {showKycBanner ? "Continue KYC" : "Start KYC"}
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        <div className="flex gap-2 mb-6">
+          {(["All", "Payments", "Data"] as const).map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => setFilter(chip)}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                filter === chip
+                  ? "bg-foreground text-background"
+                  : "bg-background text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+
+        {PRODUCTS.filter((group) => filter === "All" || group.category === filter.toUpperCase()).map((group, groupIndex) => (
           <div key={group.category}>
             <div className="mb-10">
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
@@ -343,11 +385,11 @@ export default function HomePage() {
                   return (
                     <Card
                       key={product.title}
-                      className="flex flex-col shadow-none border-border"
+                      className="flex flex-col shadow-none border-0"
                     >
                       <CardHeader className="p-4 pb-2 space-y-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                          <Icon size={20} weight="duotone" className="text-primary" />
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${group.category === "DATA" ? "bg-orange-100 dark:bg-orange-950" : "bg-secondary"}`}>
+                          <Icon size={20} weight="duotone" className={group.category === "DATA" ? "text-orange-600 dark:text-orange-400" : "text-primary"} />
                         </div>
                         <div className="space-y-2">
                           <CardTitle className="text-lg">{product.title}</CardTitle>
@@ -372,10 +414,11 @@ export default function HomePage() {
                         <Button
                           variant="outline"
                           size="lg"
-                          className="w-full"
+                          className="w-full group"
                           onClick={() => handleStartClick(product.href)}
                         >
                           Start using {product.title}
+                          <ArrowRight size={16} className="opacity-0 -ml-5 transition-all group-hover:opacity-100 group-hover:ml-0" />
                         </Button>
                       </CardFooter>
                     </Card>
@@ -384,20 +427,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {groupIndex === 0 && showKycBanner && (
-              <div className="mb-10 rounded-lg border-l-4 border-l-primary border border-border bg-secondary p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-start gap-3">
-                  <Warning size={24} weight="fill" className="text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Your KYC verification is incomplete</p>
-                    <p className="text-sm text-muted-foreground">Continue where you left off</p>
-                  </div>
-                </div>
-                <Link href="/kyc">
-                  <Button size="sm">Continue</Button>
-                </Link>
-              </div>
-            )}
           </div>
         ))}
       </div>

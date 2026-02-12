@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import confetti from "canvas-confetti";
 import Header from "@/components/Header";
 import BbpsBreadcrumb from "@/components/BbpsBreadcrumb";
 import Sidebar, { Step, MobileStepIndicator } from "@/components/Sidebar";
@@ -149,7 +150,7 @@ function countTotal(obj: object): number {
   return Object.values(obj).filter((v) => typeof v !== "boolean").length;
 }
 
-const STEP_TITLES = ["Get started", "Verify your business", "KYC Summary"];
+const STEP_TITLES = ["Get started", "Verify your business", "KYC summary"];
 
 const SUB_STEP_TITLES = ["Company documents", "Business details"];
 
@@ -310,8 +311,16 @@ export default function BbpsBouKYC() {
   const [currentStep, setCurrentStep] = useState(0);
   const [currentSubStep, setCurrentSubStep] = useState(0);
   const [formData, setFormData] = useState<BbpsFormData>(initialFormData);
-  const [skpiModalState, setSkpiModalState] = useState<"idle" | "loading" | "results">("idle");
+  const [skpiModalState, setSkpiModalState] = useState<"idle" | "loading" | "select" | "results">("idle");
   const [skpiFetchedData, setSkpiFetchedData] = useState<Record<string, string> | null>(null);
+  const [existingKycRecords, setExistingKycRecords] = useState<Array<{
+    product: string;
+    pan: string;
+    filledFields: number;
+    totalFields: number;
+    data: Record<string, string>;
+  }>>([]);
+  const [selectedKycIndex, setSelectedKycIndex] = useState<number | null>(null);
   const [gstModalState, setGstModalState] = useState<"idle" | "loading" | "results">("idle");
   const [gstFetchedData, setGstFetchedData] = useState<Record<string, string> | null>(null);
   const [kycSubmitted, setKycSubmitted] = useState(false);
@@ -366,6 +375,13 @@ export default function BbpsBouKYC() {
   function handleSubmit() {
     localStorage.setItem("kyc_completed", "true");
     setKycSubmitted(true);
+    confetti({
+      particleCount: 150,
+      spread: 100,
+      origin: { y: 0 },
+      gravity: 0.8,
+      colors: ["#0293A6", "#03C0D9", "#E8FBFF", "#FF8C42", "#FFB347", "#FFFFFF"],
+    });
   }
 
   // ── SKPI fetch handlers ──
@@ -373,21 +389,73 @@ export default function BbpsBouKYC() {
   function handleSkpiFetch() {
     if (!isValidPAN(formData.getStarted.pan)) return;
     setSkpiModalState("loading");
+    const pan = formData.getStarted.pan;
     setTimeout(() => {
-      setSkpiFetchedData({
-        "Merchant DBA Name": "Acme Payments Pvt. Ltd.",
-        "Registration Type": "pvt_ltd",
-        "PAN": formData.getStarted.pan,
-        "GST Number": "27AABCA1234H1Z5",
-        "Business Name": "Acme Payments Private Limited",
-        "Address": "301, Trade Tower, Bandra Kurla Complex",
-        "City": "Mumbai",
-        "State": "maharashtra",
-        "Pincode": "400051",
-        "Business Description": "Bill payment aggregation and collection services for utility and telecom providers",
-      });
-      setSkpiModalState("results");
+      setExistingKycRecords([
+        {
+          product: "Account Aggregator",
+          pan,
+          filledFields: 8,
+          totalFields: 10,
+          data: {
+            "Merchant DBA Name": "Acme Finserv Pvt. Ltd.",
+            "Registration Type": "pvt_ltd",
+            "PAN": pan,
+            "GST Number": "27AABCA1234H1Z5",
+            "Business Name": "Acme Finserv Private Limited",
+            "Address": "301, Trade Tower, Bandra Kurla Complex",
+            "City": "Mumbai",
+            "State": "maharashtra",
+            "Pincode": "400051",
+            "Business Description": "Financial data aggregation and analytics services for lending institutions",
+          },
+        },
+        {
+          product: "UPI Deeplinks",
+          pan,
+          filledFields: 6,
+          totalFields: 10,
+          data: {
+            "Merchant DBA Name": "Acme Pay",
+            "Registration Type": "pvt_ltd",
+            "PAN": pan,
+            "GST Number": "27AABCA1234H1Z5",
+            "Business Name": "Acme Payments Private Limited",
+            "Address": "",
+            "City": "",
+            "State": "",
+            "Pincode": "",
+            "Business Description": "UPI payment collection and disbursement services",
+          },
+        },
+        {
+          product: "Payment Gateway",
+          pan,
+          filledFields: 9,
+          totalFields: 10,
+          data: {
+            "Merchant DBA Name": "Acme Payments Pvt. Ltd.",
+            "Registration Type": "pvt_ltd",
+            "PAN": pan,
+            "GST Number": "27AABCA1234H1Z5",
+            "Business Name": "Acme Payments Private Limited",
+            "Address": "301, Trade Tower, Bandra Kurla Complex",
+            "City": "Mumbai",
+            "State": "maharashtra",
+            "Pincode": "400051",
+            "Business Description": "Online payment gateway for e-commerce and subscription businesses",
+          },
+        },
+      ]);
+      setSkpiModalState("select");
     }, 3000);
+  }
+
+  function handleSelectKycRecord(index: number) {
+    const record = existingKycRecords[index];
+    if (!record) return;
+    setSkpiFetchedData(record.data);
+    setSkpiModalState("results");
   }
 
   function handleSkpiConfirm() {
@@ -490,17 +558,13 @@ export default function BbpsBouKYC() {
               ]
             : undefined,
       },
-      ...(currentStep === 2
-        ? [
-            {
-              label: "KYC Summary",
-              completed: false,
-              active: true,
-            },
-          ]
-        : []),
+      {
+        label: "KYC summary",
+        completed: kycSubmitted,
+        active: currentStep === 2,
+      },
     ];
-  }, [formData, currentStep, currentSubStep]);
+  }, [formData, currentStep, currentSubStep, kycSubmitted]);
 
   // ── Step title ──
 
@@ -522,7 +586,7 @@ export default function BbpsBouKYC() {
     }
 
     return (
-      <section className="space-y-5">
+      <section className="space-y-2">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
           <div className={panVerification === "verified" ? "col-span-2 md:col-span-3" : "col-span-2 md:col-span-4"}>
             <TextField
@@ -547,12 +611,12 @@ export default function BbpsBouKYC() {
           )}
         </div>
         {panVerification === "verified" && (
-          <div className="space-y-4">
+          <div>
             <p className="text-xs text-muted-foreground">
               PAN Verified &mdash; Registration type auto-detected
             </p>
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-foreground">Registration type</h3>
+            <div className="space-y-2 mt-8">
+              <h3 className="text-sm font-medium text-foreground">Registration type</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {REGISTRATION_TYPE_OPTIONS.map((opt) => {
                   const Icon = opt.icon;
@@ -855,12 +919,77 @@ export default function BbpsBouKYC() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full bg-primary animate-progress-bar" />
+              <div className="h-full rounded-full bg-foreground animate-progress-bar" />
             </div>
             <p className="text-xs text-muted-foreground text-center">
               Don&apos;t refresh or close this page while we fetch your details.
             </p>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Existing KYC Selection Modal */}
+      <Dialog open={skpiModalState === "select"} onOpenChange={(open) => { if (!open) { setSkpiModalState("idle"); setExistingKycRecords([]); setSelectedKycIndex(null); } }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>3 existing KYC found</DialogTitle>
+            <DialogDescription>
+              We found {existingKycRecords.length} existing KYC records for PAN {formData.getStarted.pan}. Select one to prefill your form.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2 space-y-3 max-h-[400px] overflow-y-auto">
+            {existingKycRecords.map((record, i) => {
+              const remaining = record.totalFields - record.filledFields;
+              const isSelected = selectedKycIndex === i;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSelectedKycIndex(i)}
+                  className={`w-full rounded-lg border p-4 text-left transition-colors ${
+                    isSelected
+                      ? "border-foreground"
+                      : "border-border/50 hover:border-border"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold text-foreground">{record.product}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">PAN: {record.pan}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {remaining === 0
+                          ? "All fields available — no additional input needed"
+                          : `${remaining} field${remaining > 1 ? "s" : ""} remaining for you to fill`}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <svg width="40" height="40" viewBox="0 0 40 40">
+                        <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="3" className="text-muted/50" />
+                        <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="3" className="text-ring" strokeLinecap="round"
+                          strokeDasharray={`${2 * Math.PI * 16}`}
+                          strokeDashoffset={`${2 * Math.PI * 16 * (1 - record.filledFields / record.totalFields)}`}
+                          transform="rotate(-90 20 20)"
+                        />
+                        <text x="20" y="21" textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground" fontSize="9" fontWeight="600">
+                          {Math.round((record.filledFields / record.totalFields) * 100)}%
+                        </text>
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="w-[120px]" onClick={() => { setSkpiModalState("idle"); setExistingKycRecords([]); setSelectedKycIndex(null); }}>
+              Exit
+            </Button>
+            <Button className="w-[120px]" disabled={selectedKycIndex === null} onClick={() => { if (selectedKycIndex !== null) handleSelectKycRecord(selectedKycIndex); }}>
+              Next
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -899,7 +1028,7 @@ export default function BbpsBouKYC() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full bg-primary animate-progress-bar" />
+              <div className="h-full rounded-full bg-foreground animate-progress-bar" />
             </div>
             <p className="text-xs text-muted-foreground text-center">
               Don&apos;t refresh or close this page while we fetch your details.
