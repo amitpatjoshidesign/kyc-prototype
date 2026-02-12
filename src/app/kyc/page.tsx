@@ -412,12 +412,12 @@ function TextField({
         />
         {verification === "verified" && (
           <InputGroupAddon align="inline-end">
-            <CheckCircle size={16} weight="fill" className="text-primary" />
+            <CheckCircle weight="fill" className="text-primary size-4" />
           </InputGroupAddon>
         )}
         {verification === "error" && (
           <InputGroupAddon align="inline-end">
-            <XCircle size={16} weight="fill" className="text-red-500" />
+            <XCircle weight="fill" className="text-red-500 size-4" />
           </InputGroupAddon>
         )}
         {kbd && verification === "default" && (
@@ -895,7 +895,7 @@ export default function Home() {
                           value={digit}
                           onChange={(e) => handleOtpChange(i, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                          className="h-10 min-w-0 flex-1 rounded-md border border-input bg-transparent text-foreground text-center text-sm font-medium focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                          className="h-10 min-w-0 flex-1 rounded-md border border-input bg-transparent text-foreground text-center text-sm font-medium focus:outline-none focus:border-ring focus:ring-ring/20 focus:ring-[3px]"
                         />
                       ))}
                     </div>

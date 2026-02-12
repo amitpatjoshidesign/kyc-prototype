@@ -43,7 +43,7 @@ const PRODUCTS = [
         description: "Power payments over BBPS",
         features: ["BBPS BOU", "BBPS COU"],
         icon: Receipt,
-        href: "/kyc",
+        href: "/kyc/bbps",
       },
       {
         title: "UPI",
