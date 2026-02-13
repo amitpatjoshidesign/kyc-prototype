@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+} from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import {
   Card,
@@ -292,6 +297,7 @@ export default function HomePage() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [showKycBanner, setShowKycBanner] = useState(false);
   const [filter, setFilter] = useState<"All" | "Payments" | "Data">("All");
+  const [search, setSearch] = useState("");
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const pendingHref = useRef<string | null>(null);
 
@@ -337,7 +343,7 @@ export default function HomePage() {
 
         {!bannerDismissed && (
           <div className="mb-6 rounded-2xl bg-muted p-4 sm:p-6">
-            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary mb-4">
+            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
               {showKycBanner ? "Action needed" : "Get started"}
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
@@ -356,7 +362,7 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6">
           {(["All", "Payments", "Data"] as const).map((chip) => (
             <button
               key={chip}
@@ -371,16 +377,34 @@ export default function HomePage() {
               {chip}
             </button>
           ))}
+          <div className="ml-auto w-full max-w-[calc((100%-2*16px)/3)]">
+            <InputGroup>
+              <InputGroupAddon>
+                <MagnifyingGlass size={16} />
+              </InputGroupAddon>
+              <InputGroupInput
+                type="text"
+                placeholder="Search products"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </InputGroup>
+          </div>
         </div>
 
-        {PRODUCTS.filter((group) => filter === "All" || group.category === filter.toUpperCase()).map((group, groupIndex) => (
+        {PRODUCTS.filter((group) => filter === "All" || group.category === filter.toUpperCase()).map((group) => {
+          const filteredItems = search
+            ? group.items.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()))
+            : group.items;
+          if (filteredItems.length === 0) return null;
+          return (
           <div key={group.category}>
             <div className="mb-10">
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
                 {group.category}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {group.items.map((product) => {
+                {filteredItems.map((product) => {
                   const Icon = product.icon;
                   return (
                     <Card
@@ -428,9 +452,14 @@ export default function HomePage() {
             </div>
 
           </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* Bottom fade gradient */}
+      <div
+        className="pointer-events-none fixed bottom-0 left-0 right-0 h-[120px] z-30 bg-gradient-to-t from-background to-transparent"
+      />
 
       {/* Login overlay */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>

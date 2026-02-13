@@ -51,7 +51,7 @@ export default function Header({ showStatus = false }: { showStatus?: boolean })
   }
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between px-4 md:px-6">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between px-4 md:px-6 bg-[hsl(30,3%,98%)] dark:bg-[hsl(20,6%,12.5%)]">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2">
         <svg width={28} height={28} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-foreground">
@@ -99,7 +99,7 @@ export default function Header({ showStatus = false }: { showStatus?: boolean })
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-800 text-sm font-medium text-white cursor-pointer transition-opacity hover:opacity-80"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-medium text-white cursor-pointer transition-opacity hover:opacity-80"
                 aria-label="User menu"
               >
                 {email[0].toUpperCase()}
