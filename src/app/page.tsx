@@ -29,6 +29,7 @@ import {
   PenNib,
   TreeStructure,
   ChartLine,
+  Speedometer,
   Receipt,
   CurrencyCircleDollar,
   CreditCard,
@@ -37,9 +38,37 @@ import {
   Warning,
   ArrowRight,
   X,
+  House,
+  Compass,
+  SquaresFour,
+  PlusSquare,
+  Bell,
+  ChatCircleDots,
+  GearSix,
 } from "@phosphor-icons/react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Link from "next/link";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import dynamic from "next/dynamic";
+
+const DashboardView = dynamic(() => import("@/components/DashboardView"), {
+  ssr: false,
+  loading: () => (
+    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+      <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
+      <div className="grid grid-cols-5 gap-4 mb-8">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-24 bg-muted rounded-lg animate-pulse" />
+        ))}
+      </div>
+    </div>
+  ),
+});
 
 const PRODUCTS = [
   {
@@ -296,6 +325,7 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [showKycBanner, setShowKycBanner] = useState(false);
+  const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
   const [filter, setFilter] = useState<"All" | "Payments" | "Data">("All");
   const [search, setSearch] = useState("");
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -329,10 +359,65 @@ export default function HomePage() {
 
   if (!mounted) return null;
 
+  const NAV_ITEMS = [
+    { icon: House, label: "Home", tab: "home" as const },
+    { icon: Speedometer, label: "Dashboard", tab: "dashboard" as const },
+    { icon: SquaresFour, label: "Products" },
+    { icon: PlusSquare, label: "Create" },
+  ];
+
   return (
     <div className="relative min-h-screen bg-muted/50">
       <Header showStatus />
 
+      <div className="flex">
+        {/* Left navigation */}
+        <TooltipProvider delayDuration={200}>
+        <nav className="hidden md:flex fixed left-0 top-16 bottom-0 z-50 w-16 flex-col items-center justify-center gap-2">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.tab ? activeTab === item.tab : false;
+            return (
+              <Tooltip key={item.label}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => item.tab && setActiveTab(item.tab)}
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                      isActive
+                        ? "bg-sidebar-accent text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                    aria-label={item.label}
+                  >
+                    <Icon size={22} weight={isActive ? "fill" : "regular"} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">{item.label}</TooltipContent>
+              </Tooltip>
+            );
+          })}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
+                aria-label="Settings"
+              >
+                <GearSix size={22} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Settings</TooltipContent>
+          </Tooltip>
+        </nav>
+        </TooltipProvider>
+
+        {/* Main content */}
+        <div className="flex-1 md:ml-16">
+      {activeTab === "dashboard" ? (
+        <DashboardView />
+      ) : (
+      <>
       <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Products</h1>
@@ -455,6 +540,8 @@ export default function HomePage() {
           );
         })}
       </div>
+      </>
+      )}
 
       {/* Bottom fade gradient */}
       <div
@@ -470,6 +557,8 @@ export default function HomePage() {
           <LoginOverlay onSuccess={handleLoginSuccess} />
         </DialogContent>
       </Dialog>
+        </div>
+      </div>
     </div>
   );
 }
