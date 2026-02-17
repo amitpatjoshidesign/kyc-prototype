@@ -45,6 +45,7 @@ import {
   Bell,
   ChatCircleDots,
   GearSix,
+  BookOpen,
 } from "@phosphor-icons/react";
 import {
   Tooltip,
@@ -65,6 +66,51 @@ const DashboardView = dynamic(() => import("@/components/DashboardView"), {
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="h-24 bg-muted rounded-lg animate-pulse" />
         ))}
+      </div>
+    </div>
+  ),
+});
+
+const SettingsView = dynamic(() => import("@/components/SettingsView"), {
+  ssr: false,
+  loading: () => (
+    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+      <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
+        ))}
+      </div>
+    </div>
+  ),
+});
+
+const ConfigurationView = dynamic(() => import("@/components/ConfigurationView"), {
+  ssr: false,
+  loading: () => (
+    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+      <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
+      <div className="h-12 bg-muted rounded animate-pulse mb-8" />
+      <div className="h-64 bg-muted rounded-lg animate-pulse" />
+    </div>
+  ),
+});
+
+const DocsView = dynamic(() => import("@/components/DocsView"), {
+  ssr: false,
+  loading: () => (
+    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+      <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
+      <div className="flex gap-6">
+        <div className="hidden md:block w-[220px] space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-6 bg-muted rounded animate-pulse" />
+          ))}
+        </div>
+        <div className="flex-1 space-y-4">
+          <div className="h-24 bg-muted rounded-lg animate-pulse" />
+          <div className="h-64 bg-muted rounded-lg animate-pulse" />
+        </div>
       </div>
     </div>
   ),
@@ -325,7 +371,7 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [showKycBanner, setShowKycBanner] = useState(false);
-  const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "dashboard" | "docs" | "settings" | "configuration">("home");
   const [filter, setFilter] = useState<"All" | "Payments" | "Data">("All");
   const [search, setSearch] = useState("");
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -362,6 +408,7 @@ export default function HomePage() {
   const NAV_ITEMS = [
     { icon: House, label: "Home", tab: "home" as const },
     { icon: Speedometer, label: "Dashboard", tab: "dashboard" as const },
+    { icon: BookOpen, label: "Docs", tab: "docs" as const },
     { icon: SquaresFour, label: "Products" },
     { icon: PlusSquare, label: "Create" },
   ];
@@ -401,10 +448,15 @@ export default function HomePage() {
             <TooltipTrigger asChild>
               <button
                 type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
+                onClick={() => setActiveTab("settings")}
+                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                  activeTab === "settings"
+                    ? "bg-sidebar-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
                 aria-label="Settings"
               >
-                <GearSix size={22} />
+                <GearSix size={22} weight={activeTab === "settings" ? "fill" : "regular"} />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right">Settings</TooltipContent>
@@ -416,6 +468,12 @@ export default function HomePage() {
         <div className="flex-1 md:ml-16">
       {activeTab === "dashboard" ? (
         <DashboardView />
+      ) : activeTab === "docs" ? (
+        <DocsView />
+      ) : activeTab === "settings" ? (
+        <SettingsView />
+      ) : activeTab === "configuration" ? (
+        <ConfigurationView />
       ) : (
       <>
       <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
@@ -519,7 +577,7 @@ export default function HomePage() {
                           ))}
                         </div>
                       </CardContent>
-                      <CardFooter className="p-4 pt-0">
+                      <CardFooter className="p-4 pt-0 gap-2">
                         <Button
                           variant="outline"
                           size="lg"
@@ -529,6 +587,15 @@ export default function HomePage() {
                           Start using {product.title}
                           <ArrowRight size={16} className="opacity-0 -ml-5 transition-all group-hover:opacity-100 group-hover:ml-0" />
                         </Button>
+                        {product.title === "UPI" && (
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => setActiveTab("configuration")}
+                          >
+                            Configure
+                          </Button>
+                        )}
                       </CardFooter>
                     </Card>
                   );
