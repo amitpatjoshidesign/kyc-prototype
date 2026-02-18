@@ -395,6 +395,7 @@ export default function HomePage() {
   const [email, setEmail] = useState<string | null>(null);
   const [docsProductId, setDocsProductId] = useState("bbps");
   const [dashboardProductId, setDashboardProductId] = useState("upi");
+  const [settingsSection, setSettingsSection] = useState("Account");
   const pendingHref = useRef<string | null>(null);
 
   useEffect(() => {
@@ -673,7 +674,12 @@ export default function HomePage() {
                     <button
                       key={item}
                       type="button"
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setSettingsSection(item)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        settingsSection === item
+                          ? "bg-sidebar-accent text-foreground"
+                          : "text-foreground hover:bg-muted"
+                      }`}
                     >
                       {item}
                     </button>
@@ -708,7 +714,7 @@ export default function HomePage() {
       ) : activeTab === "docs" ? (
         <DocsView selectedProductId={docsProductId} onSelectProduct={setDocsProductId} />
       ) : activeTab === "settings" ? (
-        <SettingsView />
+        <SettingsView section={settingsSection} />
       ) : activeTab === "configuration" ? (
         <ConfigurationView />
       ) : (

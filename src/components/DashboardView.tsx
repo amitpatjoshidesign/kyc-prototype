@@ -320,13 +320,13 @@ function KpiCard({
         {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
         {bar && (
           <div className="space-y-1.5">
-            <div className="h-2 w-full rounded-full bg-muted overflow-hidden flex">
+            <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
               <div
-                className="h-full rounded-full bg-emerald-500"
+                className="h-full rounded-full bg-stone-700 dark:bg-stone-300"
                 style={{ width: `${bar.success}%` }}
               />
               <div
-                className="h-full bg-red-400"
+                className="h-full bg-stone-300 dark:bg-stone-600"
                 style={{ width: `${bar.failed}%` }}
               />
             </div>
@@ -461,7 +461,7 @@ export default function DashboardView() {
               <p className="text-xs font-medium text-muted-foreground tracking-wide">Success rate</p>
               <p className="text-3xl font-bold text-foreground mt-1">94.7%</p>
               <div className="mt-3 w-full">
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden flex">
+                <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
                   <div className="h-full rounded-full bg-emerald-500" style={{ width: "94.7%" }} />
                   <div className="h-full bg-red-400" style={{ width: "5.3%" }} />
                 </div>
