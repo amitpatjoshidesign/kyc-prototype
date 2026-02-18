@@ -8,7 +8,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MagnifyingGlass, CalendarBlank } from "@phosphor-icons/react";
+import { MagnifyingGlass, CalendarBlank, ArrowUp, ArrowDown } from "@phosphor-icons/react";
 
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
@@ -311,9 +311,9 @@ function KpiCard({
   bar?: { success: number; failed: number };
 }) {
   return (
-    <Card className="shadow-none border-0">
-      <CardContent className="p-4 space-y-2">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+    <Card className="shadow-none border border-border/40">
+      <CardContent className="p-6 space-y-2">
+        <p className="text-xs font-medium text-muted-foreground tracking-wide">
           {label}
         </p>
         <p className="text-2xl font-bold text-foreground">{value}</p>
@@ -386,11 +386,11 @@ export default function DashboardView() {
   const TIME_FILTERS = ["Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
 
   return (
-    <div className="my-2 ml-2 mr-2 rounded-xl bg-background min-h-[calc(100vh-16px)] overflow-y-auto">
-    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
-      <div className="mb-4">
+    <div className="my-2 ml-2 mr-2 rounded-xl bg-background h-[calc(100vh-16px)] overflow-hidden flex flex-col">
+      <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4">
         <h1 className="text-2xl font-bold text-foreground">UPI Transactions</h1>
       </div>
+    <div className="flex-1 overflow-y-auto px-6 pb-16">
 
       {/* Tab Switcher */}
       <div className="flex items-center gap-1 mb-6 border-b border-border">
@@ -435,45 +435,53 @@ export default function DashboardView() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        <Card className="shadow-none border-0">
-          <CardContent className="p-4 space-y-3">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total transactions</p>
-              <p className="text-2xl font-bold text-foreground">5,04,511</p>
-            </div>
-            <div className="pt-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total amount paid</p>
-              <p className="text-2xl font-bold text-foreground">₹25,832Cr</p>
-            </div>
+        <Card className="shadow-none border border-border/40">
+          <CardContent className="p-6">
+            <p className="text-xs font-medium text-muted-foreground tracking-wide">Total transactions</p>
+            <p className="text-2xl font-bold text-foreground mt-1">5,04,511</p>
+            <p className="flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <ArrowUp size={11} weight="bold" />
+              12.4% vs last period
+            </p>
           </CardContent>
         </Card>
-        <Card className="shadow-none border-0">
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Success rate</p>
-            <p className="text-3xl font-bold text-foreground mt-1">94.7%</p>
-            <div className="mt-3 w-full">
-              <div className="h-2 w-full rounded-full bg-muted overflow-hidden flex">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: "94.7%" }} />
-                <div className="h-full bg-red-400" style={{ width: "5.3%" }} />
+        <Card className="shadow-none border border-border/40">
+          <CardContent className="p-6">
+            <p className="text-xs font-medium text-muted-foreground tracking-wide">Total amount paid</p>
+            <p className="text-2xl font-bold text-foreground mt-1">₹25,832Cr</p>
+            <p className="flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <ArrowUp size={11} weight="bold" />
+              8.1% vs last period
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none border border-border/40">
+          <CardContent className="p-6 space-y-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground tracking-wide">Success rate</p>
+              <p className="text-3xl font-bold text-foreground mt-1">94.7%</p>
+              <div className="mt-3 w-full">
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden flex">
+                  <div className="h-full rounded-full bg-emerald-500" style={{ width: "94.7%" }} />
+                  <div className="h-full bg-red-400" style={{ width: "5.3%" }} />
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-none border-0">
-          <CardContent className="p-4 space-y-3">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Successful payments</p>
-              <p className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-foreground">4,67,666</span>
-                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">92.7%</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Failed payments</p>
-              <p className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-foreground">36,945</span>
-                <span className="text-xs font-medium text-red-500 dark:text-red-400">7.3%</span>
-              </p>
+            <div className="flex gap-6 pt-1">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground tracking-wide">Successful</p>
+                <p className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-lg font-bold text-foreground">4,67,666</span>
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"><ArrowUp size={11} weight="bold" />92.7%</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground tracking-wide">Failed</p>
+                <p className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-lg font-bold text-foreground">36,945</span>
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-red-500 dark:text-red-400"><ArrowDown size={11} weight="bold" />7.3%</span>
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -481,13 +489,13 @@ export default function DashboardView() {
 
       {/* Funnel (left, 2 rows) + Payment Apps & Bank Split (right, stacked) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <Card className="shadow-none border-0 lg:row-span-2">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-semibold text-center">
+        <Card className="shadow-none border border-border/40 lg:row-span-2">
+          <CardHeader className="p-6 pb-0">
+            <CardTitle className="text-base font-medium text-center">
               Payment funnel
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 h-full">
+          <CardContent className="p-6 h-full">
             <HighchartsReact
               highcharts={Highcharts}
               options={paymentsSankeyChart(isDark)}
@@ -496,13 +504,13 @@ export default function DashboardView() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-none border-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-semibold text-center">
+        <Card className="shadow-none border border-border/40">
+          <CardHeader className="p-6 pb-0">
+            <CardTitle className="text-base font-medium text-center">
               Split of payment apps used by customer
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <HighchartsReact
               highcharts={Highcharts}
               options={paymentAppsChart(isDark)}
@@ -511,13 +519,13 @@ export default function DashboardView() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-none border-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-semibold text-center">
+        <Card className="shadow-none border border-border/40">
+          <CardHeader className="p-6 pb-0">
+            <CardTitle className="text-base font-medium text-center">
               Split of customer bank used for payment
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <HighchartsReact
               highcharts={Highcharts}
               options={bankSplitChart(isDark)}
@@ -529,10 +537,10 @@ export default function DashboardView() {
 
       {/* Failed Requests Chart */}
       <div className="mb-4">
-        <Card className="shadow-none border-0">
-          <CardHeader className="p-4 pb-0">
+        <Card className="shadow-none border border-border/40">
+          <CardHeader className="p-6 pb-0">
             <div className="flex items-center justify-center gap-3">
-              <CardTitle className="text-sm font-semibold text-center">
+              <CardTitle className="text-base font-medium text-center">
                 Reasons for failed requests
               </CardTitle>
               <span className="rounded-full bg-red-100 dark:bg-red-950 px-2.5 py-0.5 text-xs font-medium text-red-600 dark:text-red-400">
@@ -540,7 +548,7 @@ export default function DashboardView() {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <HighchartsReact
               highcharts={Highcharts}
               options={failedRequestsChart(isDark)}
@@ -554,10 +562,10 @@ export default function DashboardView() {
 
       {/* Reports Table */}
       {dashboardTab === "reports" && (
-      <Card className="shadow-none border-0">
+      <Card className="shadow-none border border-border/40">
         <CardHeader className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="text-sm font-semibold text-center">Reports</CardTitle>
+            <CardTitle className="text-base font-medium text-center">Reports</CardTitle>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-muted-foreground">
                 <CalendarBlank size={14} />

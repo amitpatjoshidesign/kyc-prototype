@@ -12,6 +12,7 @@ import {
   Terminal,
   CaretDown,
   CaretRight,
+  SidebarSimple,
   Receipt,
   CurrencyCircleDollar,
   CreditCard,
@@ -503,6 +504,7 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [expandedFaqs, setExpandedFaqs] = useState<Set<number>>(new Set());
+  const [chatCollapsed, setChatCollapsed] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const selectedProductId = externalProductId ?? "bbps";
@@ -551,24 +553,24 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
   ];
 
   return (
-    <div className="flex min-h-screen gap-2">
+    <div className="flex h-[calc(100vh-16px)] gap-0.5 my-2 ml-2">
       {/* Doc content */}
-      <div className="flex-1 my-2 ml-2 rounded-xl bg-background overflow-y-auto">
-        <div className="mx-auto max-w-[760px] px-6 pt-6 pb-16">
-          <div className="mb-6">
-            {(() => {
-              const meta = PRODUCT_META[selectedProductId];
-              const Icon = meta?.icon;
-              const isData = meta?.category === "DATA";
-              return Icon ? (
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg mb-4 ${isData ? "bg-orange-100 dark:bg-orange-950" : "bg-secondary"}`}>
-                  <Icon size={20} weight="duotone" className={isData ? "text-orange-600 dark:text-orange-400" : "text-primary"} />
-                </div>
-              ) : null;
-            })()}
-            <h1 className="text-2xl font-bold text-foreground">{product.title}</h1>
-            <p className="mt-1 text-sm text-foreground/80">{product.description}</p>
-          </div>
+      <div className="flex-1 rounded-l-xl bg-background overflow-hidden flex flex-col">
+        <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4">
+          {(() => {
+            const meta = PRODUCT_META[selectedProductId];
+            const Icon = meta?.icon;
+            const isData = meta?.category === "DATA";
+            return Icon ? (
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg mb-4 ${isData ? "bg-orange-100 dark:bg-orange-950" : "bg-secondary"}`}>
+                <Icon size={20} weight="duotone" className={isData ? "text-orange-600 dark:text-orange-400" : "text-primary"} />
+              </div>
+            ) : null;
+          })()}
+          <h1 className="text-2xl font-bold text-foreground">{product.title}</h1>
+          <p className="mt-1 text-sm text-foreground/80">{product.description}</p>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 pb-16">
         <div className="flex-1 min-w-0">
           {/* Product Header */}
           {/* Mobile product selector */}
@@ -831,10 +833,28 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
       </div>
 
       {/* Ask Setu AI — full-height panel */}
-      <div className="w-[300px] shrink-0 sticky top-2 my-2 mr-2 h-[calc(100vh-16px)] flex flex-col bg-background rounded-xl overflow-hidden z-40">
+      {chatCollapsed ? (
+        <button
+          type="button"
+          onClick={() => setChatCollapsed(false)}
+          className="shrink-0 self-start flex items-center justify-center h-8 w-8 mr-2 mt-2 rounded-lg bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors z-40"
+          aria-label="Expand chat"
+        >
+          <SidebarSimple size={16} weight="regular" className="rotate-180" />
+        </button>
+      ) : (
+      <div className="w-[300px] shrink-0 mr-2 flex flex-col bg-background rounded-r-xl overflow-hidden z-40">
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-4 border-b border-muted shrink-0">
-          <span className="text-sm font-semibold text-foreground">Ask Setu AI</span>
+        <div className="flex items-center gap-2 px-3 py-4 border-b border-muted shrink-0">
+          <span className="text-sm font-semibold text-foreground flex-1">Ask Setu AI</span>
+          <button
+            type="button"
+            onClick={() => setChatCollapsed(true)}
+            className="flex items-center justify-center h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+            aria-label="Collapse chat"
+          >
+            <SidebarSimple size={16} weight="regular" />
+          </button>
         </div>
 
         {/* Messages */}
@@ -913,6 +933,7 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
           </form>
         </div>
       </div>
+      )}
     </div>
   );
 }

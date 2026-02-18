@@ -67,7 +67,7 @@ import dynamic from "next/dynamic";
 const DashboardView = dynamic(() => import("@/components/DashboardView"), {
   ssr: false,
   loading: () => (
-    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+    <div className="px-6 pt-6 pb-16">
       <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
       <div className="grid grid-cols-5 gap-4 mb-8">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -81,7 +81,7 @@ const DashboardView = dynamic(() => import("@/components/DashboardView"), {
 const SettingsView = dynamic(() => import("@/components/SettingsView"), {
   ssr: false,
   loading: () => (
-    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+    <div className="px-6 pt-6 pb-16">
       <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -95,7 +95,7 @@ const SettingsView = dynamic(() => import("@/components/SettingsView"), {
 const ConfigurationView = dynamic(() => import("@/components/ConfigurationView"), {
   ssr: false,
   loading: () => (
-    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+    <div className="px-6 pt-6 pb-16">
       <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
       <div className="h-12 bg-muted rounded animate-pulse mb-8" />
       <div className="h-64 bg-muted rounded-lg animate-pulse" />
@@ -106,7 +106,7 @@ const ConfigurationView = dynamic(() => import("@/components/ConfigurationView")
 const DocsView = dynamic(() => import("@/components/DocsView"), {
   ssr: false,
   loading: () => (
-    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
+    <div className="px-6 pt-6 pb-16">
       <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
       <div className="flex gap-6">
         <div className="hidden md:block w-[220px] space-y-3">
@@ -712,14 +712,14 @@ export default function HomePage() {
       ) : activeTab === "configuration" ? (
         <ConfigurationView />
       ) : (
-      <div className="my-2 ml-2 mr-2 rounded-xl bg-background overflow-y-auto min-h-[calc(100vh-16px)]">
-      <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Products</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Choose a product to get started with Bridge
-          </p>
-        </div>
+      <div className="my-2 ml-2 mr-2 rounded-xl bg-background h-[calc(100vh-16px)] overflow-hidden flex flex-col">
+      <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4">
+        <h1 className="text-2xl font-bold text-foreground">Products</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Choose a product to get started with Bridge
+        </p>
+      </div>
+      <div className="flex-1 overflow-y-auto px-6 pb-16">
 
         {!bannerDismissed && (
           <div className="mb-6 rounded-2xl bg-muted p-4 sm:p-6">
@@ -750,7 +750,7 @@ export default function HomePage() {
           return (
           <div key={group.category}>
             <div className="mb-10">
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
+              <h2 className="mb-4 text-xs font-semibold tracking-wide text-foreground capitalize">
                 {group.category}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -759,7 +759,7 @@ export default function HomePage() {
                   return (
                     <Card
                       key={product.title}
-                      className="flex flex-col shadow-none border-0"
+                      className="flex flex-col shadow-none border border-border/40"
                     >
                       <CardHeader className="p-4 pb-2 space-y-4">
                         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${group.category === "DATA" ? "bg-orange-100 dark:bg-orange-950" : "bg-secondary"}`}>
