@@ -8,12 +8,32 @@ import {
 import {
   Robot,
   PaperPlaneTilt,
-  X,
   Code,
   Terminal,
   CaretDown,
   CaretRight,
+  Receipt,
+  CurrencyCircleDollar,
+  CreditCard,
+  Wallet,
+  Coins,
+  MagnifyingGlass,
+  PenNib,
+  TreeStructure,
+  ChartLine,
 } from "@phosphor-icons/react";
+
+const PRODUCT_META: Record<string, { icon: React.ElementType; category: "PAYMENTS" | "DATA" }> = {
+  bbps:       { icon: Receipt,             category: "PAYMENTS" },
+  upi:        { icon: CurrencyCircleDollar, category: "PAYMENTS" },
+  pg:         { icon: CreditCard,          category: "PAYMENTS" },
+  payouts:    { icon: Wallet,              category: "PAYMENTS" },
+  creditline: { icon: Coins,              category: "PAYMENTS" },
+  kyc:        { icon: MagnifyingGlass,     category: "DATA" },
+  esign:      { icon: PenNib,             category: "DATA" },
+  aa:         { icon: TreeStructure,       category: "DATA" },
+  insights:   { icon: ChartLine,          category: "DATA" },
+};
 
 /* ── Product Data ── */
 const PRODUCTS = {
@@ -472,17 +492,20 @@ interface ChatMessage {
 }
 
 /* ── DocsView Component ── */
-export default function DocsView() {
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>("Payments");
-  const [selectedProductId, setSelectedProductId] = useState("bbps");
+interface DocsViewProps {
+  selectedProductId?: string;
+  onSelectProduct?: (id: string) => void;
+}
+
+export default function DocsView({ selectedProductId: externalProductId, onSelectProduct }: DocsViewProps) {
   const [activeSubsection, setActiveSubsection] = useState<Subsection>("Overview");
-  const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [expandedFaqs, setExpandedFaqs] = useState<Set<number>>(new Set());
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const selectedProductId = externalProductId ?? "bbps";
   const allProducts = [...PRODUCTS.Payments, ...PRODUCTS.Data];
   const product = allProducts.find((p) => p.id === selectedProductId) ?? PRODUCTS.Payments[0];
 
@@ -490,10 +513,13 @@ export default function DocsView() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, isTyping]);
 
-  function handleSelectProduct(id: string) {
-    setSelectedProductId(id);
+  useEffect(() => {
     setActiveSubsection("Overview");
     setExpandedFaqs(new Set());
+  }, [selectedProductId]);
+
+  function handleSelectProduct(id: string) {
+    onSelectProduct?.(id);
   }
 
   function handleSendMessage(message: string) {
@@ -525,55 +551,26 @@ export default function DocsView() {
   ];
 
   return (
-    <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Documentation</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Explore product guides, API references, and integration resources
-        </p>
-      </div>
-
-      <div className="flex gap-6">
-        {/* Left Sidebar */}
-        <div className="hidden md:block w-[220px] shrink-0">
-          <nav className="sticky top-24 space-y-6">
-            {(Object.keys(PRODUCTS) as ProductCategory[]).map((category) => (
-              <div key={category}>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  {category}
-                </h3>
-                <ul className="space-y-0.5">
-                  {PRODUCTS[category].map((p) => (
-                    <li key={p.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectProduct(p.id)}
-                        className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                          selectedProductId === p.id
-                            ? "bg-sidebar-accent text-foreground font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {p.title}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
-        </div>
-
-        {/* Center Content */}
+    <div className="flex min-h-screen gap-2">
+      {/* Doc content */}
+      <div className="flex-1 my-2 ml-2 rounded-xl bg-background overflow-y-auto">
+        <div className="mx-auto max-w-[760px] px-6 pt-6 pb-16">
+          <div className="mb-6">
+            {(() => {
+              const meta = PRODUCT_META[selectedProductId];
+              const Icon = meta?.icon;
+              const isData = meta?.category === "DATA";
+              return Icon ? (
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg mb-4 ${isData ? "bg-orange-100 dark:bg-orange-950" : "bg-secondary"}`}>
+                  <Icon size={20} weight="duotone" className={isData ? "text-orange-600 dark:text-orange-400" : "text-primary"} />
+                </div>
+              ) : null;
+            })()}
+            <h1 className="text-2xl font-bold text-foreground">{product.title}</h1>
+            <p className="mt-1 text-sm text-foreground/80">{product.description}</p>
+          </div>
         <div className="flex-1 min-w-0">
           {/* Product Header */}
-          <Card className="shadow-none border-0 mb-4">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold text-foreground mb-2">{product.title}</h2>
-              <p className="text-sm text-muted-foreground">{product.description}</p>
-            </CardContent>
-          </Card>
-
           {/* Mobile product selector */}
           <div className="md:hidden mb-4">
             <select
@@ -592,7 +589,7 @@ export default function DocsView() {
           </div>
 
           {/* Subsection Tabs */}
-          <div className="flex items-center gap-1 mb-6 border-b border-border overflow-x-auto">
+          <div className="flex items-center gap-1 mb-6 border-b border-muted overflow-x-auto">
             {SUBSECTIONS.map((tab) => (
               <button
                 key={tab}
@@ -615,33 +612,27 @@ export default function DocsView() {
           {/* Overview */}
           {activeSubsection === "Overview" && (
             <div className="space-y-4">
-              <Card className="shadow-none border-0">
-                <CardContent className="p-6 space-y-4">
-                  <h3 className="text-base font-semibold text-foreground">About {product.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
-                </CardContent>
-              </Card>
-              <Card className="shadow-none border-0">
-                <CardContent className="p-6 space-y-3">
+              <Card className="shadow-none border-0 bg-transparent">
+                <CardContent className="p-0 space-y-3">
                   <h3 className="text-base font-semibold text-foreground">Key Features</h3>
                   <ul className="space-y-2">
                     {product.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                      <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0" />
                         {f}
                       </li>
                     ))}
                   </ul>
                 </CardContent>
               </Card>
-              <Card className="shadow-none border-0">
-                <CardContent className="p-6 space-y-3">
+              <Card className="shadow-none border-0 bg-transparent">
+                <CardContent className="p-0 space-y-3">
                   <h3 className="text-base font-semibold text-foreground">Use Cases</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {product.useCases.map((uc) => (
                       <div
                         key={uc}
-                        className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground"
+                        className="rounded-lg bg-muted px-3 py-2 text-sm text-foreground"
                       >
                         {uc}
                       </div>
@@ -654,8 +645,8 @@ export default function DocsView() {
 
           {/* Quick Start */}
           {activeSubsection === "Quick Start" && (
-            <Card className="shadow-none border-0">
-              <CardContent className="p-6 space-y-6">
+            <Card className="shadow-none border-0 bg-transparent">
+              <CardContent className="p-0 space-y-6">
                 <h3 className="text-base font-semibold text-foreground">Getting Started with {product.title}</h3>
                 {[
                   { step: 1, title: "Install the SDK", content: `npm install @setu/node-sdk` },
@@ -682,8 +673,8 @@ export default function DocsView() {
           {/* API Reference */}
           {activeSubsection === "API Reference" && (
             <div className="space-y-4">
-              <Card className="shadow-none border-0">
-                <CardContent className="p-6 space-y-4">
+              <Card className="shadow-none border-0 bg-transparent">
+                <CardContent className="p-0 space-y-4">
                   <h3 className="text-base font-semibold text-foreground">Endpoints</h3>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -709,7 +700,7 @@ export default function DocsView() {
                               </span>
                             </td>
                             <td className="px-3 py-2 font-mono text-xs text-foreground">{ep.path}</td>
-                            <td className="px-3 py-2 text-muted-foreground">{ep.desc}</td>
+                            <td className="px-3 py-2 text-foreground">{ep.desc}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -718,8 +709,8 @@ export default function DocsView() {
                 </CardContent>
               </Card>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card className="shadow-none border-0">
-                  <CardContent className="p-6 space-y-2">
+                <Card className="shadow-none border-0 bg-transparent">
+                  <CardContent className="p-0 space-y-2">
                     <div className="flex items-center gap-2 mb-3">
                       <Code size={16} className="text-muted-foreground" />
                       <h4 className="text-sm font-semibold text-foreground">Sample Request</h4>
@@ -729,8 +720,8 @@ export default function DocsView() {
                     </pre>
                   </CardContent>
                 </Card>
-                <Card className="shadow-none border-0">
-                  <CardContent className="p-6 space-y-2">
+                <Card className="shadow-none border-0 bg-transparent">
+                  <CardContent className="p-0 space-y-2">
                     <div className="flex items-center gap-2 mb-3">
                       <Terminal size={16} className="text-muted-foreground" />
                       <h4 className="text-sm font-semibold text-foreground">Sample Response</h4>
@@ -748,8 +739,8 @@ export default function DocsView() {
           {activeSubsection === "SDKs" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {SDK_LANGUAGES.map((lang) => (
-                <Card key={lang.name} className="shadow-none border-0">
-                  <CardContent className="p-6 space-y-3">
+                <Card key={lang.name} className="shadow-none border-0 bg-transparent">
+                  <CardContent className="p-0 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground">
                         {lang.icon}
@@ -768,8 +759,8 @@ export default function DocsView() {
           {/* Webhooks */}
           {activeSubsection === "Webhooks" && (
             <div className="space-y-4">
-              <Card className="shadow-none border-0">
-                <CardContent className="p-6 space-y-4">
+              <Card className="shadow-none border-0 bg-transparent">
+                <CardContent className="p-0 space-y-4">
                   <h3 className="text-base font-semibold text-foreground">Webhook Events</h3>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -783,7 +774,7 @@ export default function DocsView() {
                         {product.webhookEvents.map((evt) => (
                           <tr key={evt} className="border-b border-border last:border-0">
                             <td className="px-3 py-2 font-mono text-xs text-foreground">{evt}</td>
-                            <td className="px-3 py-2 text-muted-foreground">
+                            <td className="px-3 py-2 text-foreground">
                               Triggered when {evt.split(".").slice(1).join(" ")} occurs
                             </td>
                           </tr>
@@ -793,8 +784,8 @@ export default function DocsView() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="shadow-none border-0">
-                <CardContent className="p-6 space-y-2">
+              <Card className="shadow-none border-0 bg-transparent">
+                <CardContent className="p-0 space-y-2">
                   <div className="flex items-center gap-2 mb-3">
                     <Code size={16} className="text-muted-foreground" />
                     <h4 className="text-sm font-semibold text-foreground">Sample Webhook Payload</h4>
@@ -811,7 +802,7 @@ export default function DocsView() {
           {activeSubsection === "FAQs" && (
             <div className="space-y-2">
               {product.faqs.map((faq, idx) => (
-                <Card key={idx} className="shadow-none border-0">
+                <Card key={idx} className="shadow-none border-0 bg-transparent">
                   <CardContent className="p-0">
                     <button
                       type="button"
@@ -827,7 +818,7 @@ export default function DocsView() {
                     </button>
                     {expandedFaqs.has(idx) && (
                       <div className="px-4 pb-4">
-                        <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                        <p className="text-sm text-foreground leading-relaxed">{faq.a}</p>
                       </div>
                     )}
                   </CardContent>
@@ -836,121 +827,92 @@ export default function DocsView() {
             </div>
           )}
         </div>
+        </div>
       </div>
 
-      {/* AI Chat Button */}
-      {!chatOpen && (
-        <button
-          type="button"
-          onClick={() => setChatOpen(true)}
-          className="fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105"
-          aria-label="Open AI Assistant"
-        >
-          <Robot size={24} weight="fill" />
-        </button>
-      )}
+      {/* Ask Setu AI — full-height panel */}
+      <div className="w-[300px] shrink-0 sticky top-2 my-2 mr-2 h-[calc(100vh-16px)] flex flex-col bg-background rounded-xl overflow-hidden z-40">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-4 py-4 border-b border-muted shrink-0">
+          <span className="text-sm font-semibold text-foreground">Ask Setu AI</span>
+        </div>
 
-      {/* AI Chat Panel */}
-      {chatOpen && (
-        <div className="fixed bottom-8 right-8 z-50 w-[400px] max-h-[560px] flex flex-col rounded-2xl border border-border bg-background shadow-xl">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Robot size={20} weight="fill" className="text-primary" />
-              <span className="text-sm font-semibold text-foreground">Setu AI Assistant</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setChatOpen(false)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              aria-label="Close chat"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[360px]">
-            {chatMessages.length === 0 && !isTyping && (
-              <div className="text-center py-6">
-                <Robot size={32} className="mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  Ask me anything about {product.title}
-                </p>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {chatMessages.length === 0 && !isTyping && (
+            <div className="flex flex-col items-center justify-center h-full text-center py-10 gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                <Robot size={24} weight="fill" className="text-primary" />
               </div>
-            )}
-            {chatMessages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
-                  }`}
-                >
-                  {msg.content}
-                </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Ask me anything</p>
+                <p className="text-xs text-muted-foreground mt-1">About {product.title} APIs, integration, pricing, and more</p>
               </div>
-            ))}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-muted rounded-2xl px-4 py-3 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Suggested Questions */}
-          {chatMessages.length === 0 && (
-            <div className="px-4 pb-2 flex flex-wrap gap-1.5">
-              {suggestedQuestions.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => handleSendMessage(q)}
-                  className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  {q}
-                </button>
-              ))}
             </div>
           )}
-
-          {/* Input */}
-          <div className="p-3 border-t border-border">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage(chatInput);
-              }}
-              className="flex items-center gap-2"
-            >
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask a question..."
-                className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <button
-                type="submit"
-                disabled={!chatInput.trim() || isTyping}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-opacity"
-                aria-label="Send message"
-              >
-                <PaperPlaneTilt size={16} weight="fill" />
-              </button>
-            </form>
-          </div>
+          {chatMessages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-line ${
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground"
+              }`}>
+                {msg.content}
+              </div>
+            </div>
+          ))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-muted rounded-2xl px-4 py-3 flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
+                <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
+                <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
         </div>
-      )}
+
+        {/* Suggested questions */}
+        {chatMessages.length === 0 && (
+          <div className="px-3 pb-3 flex flex-col gap-1.5 shrink-0">
+            {suggestedQuestions.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => handleSendMessage(q)}
+                className="w-full text-left rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="p-3 border-t border-muted shrink-0">
+          <form
+            onSubmit={(e) => { e.preventDefault(); handleSendMessage(chatInput); }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask a question..."
+              className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              type="submit"
+              disabled={!chatInput.trim() || isTyping}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-opacity"
+              aria-label="Send"
+            >
+              <PaperPlaneTilt size={16} weight="fill" />
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

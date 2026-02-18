@@ -386,9 +386,10 @@ export default function DashboardView() {
   const TIME_FILTERS = ["Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
 
   return (
+    <div className="my-2 ml-2 mr-2 rounded-xl bg-background min-h-[calc(100vh-16px)] overflow-y-auto">
     <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
+        <h1 className="text-2xl font-bold text-foreground">UPI Transactions</h1>
       </div>
 
       {/* Tab Switcher */}
@@ -637,6 +638,7 @@ export default function DashboardView() {
         </CardContent>
       </Card>
       )}
+    </div>
     </div>
   );
 }

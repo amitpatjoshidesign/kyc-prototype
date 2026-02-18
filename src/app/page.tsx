@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +45,9 @@ import {
   ChatCircleDots,
   GearSix,
   BookOpen,
+  Moon,
+  Sun,
+  SignOut,
 } from "@phosphor-icons/react";
 import {
   Tooltip,
@@ -53,6 +55,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import Link from "next/link";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import dynamic from "next/dynamic";
@@ -121,6 +128,7 @@ const PRODUCTS = [
     category: "PAYMENTS",
     items: [
       {
+        id: "bbps",
         title: "BBPS",
         description: "Power payments over BBPS",
         features: ["BBPS BOU", "BBPS COU"],
@@ -128,6 +136,7 @@ const PRODUCTS = [
         href: "/kyc/bbps",
       },
       {
+        id: "upi",
         title: "UPI",
         description: "Power seamless UPI payment journeys",
         features: ["Recur", "Deeplinks", "Flash", "Reserve", "Third Party Verification"],
@@ -135,6 +144,7 @@ const PRODUCTS = [
         href: "/kyc",
       },
       {
+        id: "pg",
         title: "Payment Gateway",
         description: "Accept online payments with ease",
         features: ["Cards", "Net banking", "UPI", "Wallets"],
@@ -142,6 +152,7 @@ const PRODUCTS = [
         href: "/kyc",
       },
       {
+        id: "payouts",
         title: "Payouts",
         description: "Disburse payments at scale",
         features: ["Bank transfers", "UPI payouts", "Bulk disbursals"],
@@ -149,6 +160,7 @@ const PRODUCTS = [
         href: "/kyc",
       },
       {
+        id: "creditline",
         title: "Credit Line",
         description: "Enable credit for your customers",
         features: ["Instant approval", "Flexible limits", "EMI options"],
@@ -161,6 +173,7 @@ const PRODUCTS = [
     category: "DATA",
     items: [
       {
+        id: "kyc",
         title: "KYC",
         description: "Verify individuals or businesses with ease",
         features: ["Bank account verification", "PAN", "eKYC Setu (for Aadhaar)", "DigiLocker"],
@@ -168,6 +181,7 @@ const PRODUCTS = [
         href: "/kyc",
       },
       {
+        id: "esign",
         title: "eSign Gateway",
         description: "Integrate India's best Aadhaar eSign experience",
         features: ["Aadhaar eSign", "Digital signatures", "Document workflow"],
@@ -175,6 +189,7 @@ const PRODUCTS = [
         href: "/kyc",
       },
       {
+        id: "aa",
         title: "Account Aggregator",
         description: "Access financial data with user consent",
         features: ["Consent management", "Financial data", "Multi-FIP support"],
@@ -182,6 +197,7 @@ const PRODUCTS = [
         href: "/kyc/insights",
       },
       {
+        id: "insights",
         title: "Insights",
         description: "Analysing your customers' financial data, made easy",
         features: ["Credit scoring", "Risk analysis", "Income verification"],
@@ -375,6 +391,10 @@ export default function HomePage() {
   const [filter, setFilter] = useState<"All" | "Payments" | "Data">("All");
   const [search, setSearch] = useState("");
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [dark, setDark] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const [docsProductId, setDocsProductId] = useState("bbps");
+  const [dashboardProductId, setDashboardProductId] = useState("upi");
   const pendingHref = useRef<string | null>(null);
 
   useEffect(() => {
@@ -384,7 +404,44 @@ export default function HomePage() {
     if (started === "true" && completed !== "true") {
       setShowKycBanner(true);
     }
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      setDark(true);
+      document.documentElement.classList.add("dark");
+    }
+    const auth = localStorage.getItem("bridge_auth");
+    if (auth === "true") {
+      setEmail(localStorage.getItem("bridge_email"));
+    }
   }, []);
+
+  function handleLogout() {
+    localStorage.removeItem("bridge_auth");
+    localStorage.removeItem("bridge_email");
+    localStorage.removeItem("kyc_started");
+    localStorage.removeItem("kyc_completed");
+    setEmail(null);
+    router.push("/");
+    router.refresh();
+  }
+
+  function toggleTheme() {
+    document.documentElement.classList.add("theme-transition");
+    setDark((prev) => {
+      const next = !prev;
+      if (next) {
+        document.documentElement.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+      }
+      return next;
+    });
+    setTimeout(() => {
+      document.documentElement.classList.remove("theme-transition");
+    }, 500);
+  }
 
   function handleStartClick(href: string) {
     const auth = localStorage.getItem("bridge_auth");
@@ -413,14 +470,32 @@ export default function HomePage() {
     { icon: PlusSquare, label: "Create" },
   ];
 
+  const logoSvg = (
+    <svg width={26} height={26} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-foreground">
+      <path fillRule="evenodd" clipRule="evenodd" d="M0 16C0 8.45753 0 4.68629 2.34315 2.34315C4.68629 0 8.45753 0 16 0C23.5425 0 27.3137 0 29.6569 2.34315C32 4.68629 32 8.45753 32 16C32 23.5425 32 27.3137 29.6569 29.6569C27.3137 32 23.5425 32 16 32C8.45753 32 4.68629 32 2.34315 29.6569C0 27.3137 0 23.5425 0 16ZM18.0223 14.8714C17.3694 14.6863 16.6923 14.589 15.9983 14.589C15.2785 14.589 14.5769 14.6937 13.9016 14.8924C10.8292 15.7963 8.29946 18.6452 7.06511 22.4288C6.8191 23.1829 6.6961 23.56 6.9275 23.8098C7.15891 24.0596 7.56431 23.9609 8.37511 23.7634L9.69397 23.4422C10.2182 23.3146 10.4802 23.2508 10.6618 23.0864C10.8434 22.9221 10.9411 22.6448 11.1364 22.0902C11.7931 20.2252 12.7594 18.6085 13.9016 17.8211C14.5517 17.373 15.2588 17.1272 15.9983 17.1272C16.7103 17.1272 17.3923 17.3551 18.0223 17.7721C19.1997 18.5514 20.1954 20.1971 20.8661 22.1072C21.0612 22.6629 21.1588 22.9407 21.3405 23.1053C21.5221 23.2699 21.7846 23.3338 22.3095 23.4616L23.6275 23.7826C24.4373 23.9798 24.8423 24.0784 25.0737 23.829C25.3051 23.5795 25.1827 23.2027 24.938 22.4491C23.6964 18.6256 21.1329 15.7531 18.0223 14.8714ZM15.9993 11.7891C18.7869 11.7891 21.1926 12.3891 22.7131 12.8889C23.5399 13.1607 23.9533 13.2966 24.193 13.1231C24.4327 12.9496 24.4327 12.5351 24.4327 11.706V11.255C24.4327 10.3091 24.4327 9.83619 24.1437 9.50784C23.8547 9.1795 23.3996 9.12124 22.4895 9.00471C18.1633 8.45082 13.8412 8.45212 9.515 9.00518C8.60432 9.1216 8.14898 9.17981 7.85992 9.50817C7.57086 9.83654 7.57086 10.3096 7.57086 11.2558V11.704C7.57086 12.5332 7.57086 12.9477 7.81053 13.1213C8.05019 13.2948 8.46371 13.1589 9.29073 12.8871C10.8099 12.3879 13.2129 11.7891 15.9993 11.7891Z" fill="currentColor"/>
+    </svg>
+  );
+
   return (
     <div className="relative min-h-screen bg-muted/50">
-      <Header showStatus />
-
       <div className="flex">
         {/* Left navigation */}
         <TooltipProvider delayDuration={200}>
-        <nav className="hidden md:flex fixed left-0 top-16 bottom-0 z-50 w-16 flex-col items-center justify-center gap-2">
+        <nav className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-16 flex-col items-center">
+          {/* Logo */}
+          <div className="flex h-16 w-full items-center justify-center shrink-0">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/" aria-label="Bridge home" className="flex items-center justify-center h-10 w-10 rounded-xl hover:bg-muted transition-colors">
+                  {logoSvg}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Bridge</TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Nav items */}
+          <div className="flex flex-1 flex-col items-center gap-1 py-2">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = item.tab ? activeTab === item.tab : false;
@@ -432,8 +507,8 @@ export default function HomePage() {
                     onClick={() => item.tab && setActiveTab(item.tab)}
                     className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
                       isActive
-                        ? "bg-sidebar-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? "bg-foreground/15 text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-foreground/8"
                     }`}
                     aria-label={item.label}
                   >
@@ -451,8 +526,8 @@ export default function HomePage() {
                 onClick={() => setActiveTab("settings")}
                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
                   activeTab === "settings"
-                    ? "bg-sidebar-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-foreground/15 text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/8"
                 }`}
                 aria-label="Settings"
               >
@@ -461,21 +536,183 @@ export default function HomePage() {
             </TooltipTrigger>
             <TooltipContent side="right">Settings</TooltipContent>
           </Tooltip>
+          </div>
+
+          {/* Bottom: theme switcher + account */}
+          <div className="flex flex-col items-center gap-1 pb-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Toggle dark mode"
+                >
+                  {dark ? <Sun size={20} weight="regular" /> : <Moon size={20} weight="regular" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">{dark ? "Light mode" : "Dark mode"}</TooltipContent>
+            </Tooltip>
+
+            {email ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:bg-muted"
+                    aria-label="User menu"
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-500 text-xs font-medium text-white">
+                      {email[0].toUpperCase()}
+                    </span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="right" align="end" className="w-56 p-2">
+                  <div className="px-2 py-1.5 mb-1">
+                    <p className="text-sm font-medium text-foreground truncate">{email}</p>
+                  </div>
+                  <div className="h-px bg-border my-1" />
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-foreground"
+                  >
+                    <SignOut size={16} />
+                    Sign out
+                  </button>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setLoginOpen(true)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Sign in"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted-foreground/20 text-xs font-medium text-muted-foreground">
+                  ?
+                </span>
+              </button>
+            )}
+          </div>
         </nav>
         </TooltipProvider>
 
+        {/* Secondary navigation panel */}
+        {activeTab !== "home" && (
+        <aside className="hidden md:flex fixed left-[68px] top-2 bottom-2 w-[216px] z-40 flex-col bg-background rounded-xl overflow-hidden">
+          <div className="p-3 pt-5 flex-1 overflow-y-auto">
+            {activeTab === "dashboard" && (() => {
+              const CONFIGURED = [
+                { id: "upi", title: "UPI", category: "PAYMENTS" },
+                { id: "creditline", title: "Credit Line", category: "PAYMENTS" },
+                { id: "insights", title: "Insights", category: "DATA" },
+              ];
+              const allItems = PRODUCTS.flatMap((g) => g.items);
+              return (
+                <div className="mb-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 px-2">Your products</p>
+                  <div className="space-y-0.5">
+                    {CONFIGURED.map((cfg) => {
+                      const item = allItems.find((p) => p.id === cfg.id)!;
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setDashboardProductId(item.id)}
+                          className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            dashboardProductId === item.id
+                              ? "bg-sidebar-accent text-foreground"
+                              : "text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          <Icon size={16} weight="regular" className="shrink-0" />
+                          {item.title}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+            {activeTab === "docs" && (
+              <>
+                {PRODUCTS.map((group) => (
+                  <div key={group.category} className="mb-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 px-2">{group.category}</p>
+                    <div className="space-y-0.5">
+                      {group.items.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setDocsProductId(item.id)}
+                            className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              docsProductId === item.id
+                                ? "bg-sidebar-accent text-foreground"
+                                : "text-foreground hover:bg-muted"
+                            }`}
+                          >
+                            <Icon size={16} weight="regular" className="shrink-0" />
+                            {item.title}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            {activeTab === "settings" && (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-2">Settings</p>
+                <div className="space-y-0.5">
+                  {["Account", "Team", "API Keys", "Webhooks", "Billing"].map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {activeTab === "configuration" && (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-2">Configuration</p>
+                <div className="space-y-0.5">
+                  {["UPI", "Payment Gateway", "Payouts"].map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </aside>
+        )}
+
         {/* Main content */}
-        <div className="flex-1 md:ml-16">
+        <div className={`flex-1 ${activeTab === "home" ? "md:ml-[68px]" : "md:ml-[284px]"}`}>
       {activeTab === "dashboard" ? (
         <DashboardView />
       ) : activeTab === "docs" ? (
-        <DocsView />
+        <DocsView selectedProductId={docsProductId} onSelectProduct={setDocsProductId} />
       ) : activeTab === "settings" ? (
         <SettingsView />
       ) : activeTab === "configuration" ? (
         <ConfigurationView />
       ) : (
-      <>
+      <div className="my-2 ml-2 mr-2 rounded-xl bg-background overflow-y-auto min-h-[calc(100vh-16px)]">
       <div className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Products</h1>
@@ -505,37 +742,7 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 mb-6">
-          {(["All", "Payments", "Data"] as const).map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => setFilter(chip)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                filter === chip
-                  ? "bg-foreground text-background"
-                  : "bg-background text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-          <div className="ml-auto w-full max-w-[calc((100%-2*16px)/3)]">
-            <InputGroup>
-              <InputGroupAddon>
-                <MagnifyingGlass size={16} />
-              </InputGroupAddon>
-              <InputGroupInput
-                type="text"
-                placeholder="Search products"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </InputGroup>
-          </div>
-        </div>
-
-        {PRODUCTS.filter((group) => filter === "All" || group.category === filter.toUpperCase()).map((group) => {
+{PRODUCTS.filter((group) => filter === "All" || group.category === filter.toUpperCase()).map((group) => {
           const filteredItems = search
             ? group.items.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()))
             : group.items;
@@ -607,7 +814,7 @@ export default function HomePage() {
           );
         })}
       </div>
-      </>
+      </div>
       )}
 
       {/* Bottom fade gradient */}
