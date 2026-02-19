@@ -16,6 +16,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+      <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
       <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
   );
