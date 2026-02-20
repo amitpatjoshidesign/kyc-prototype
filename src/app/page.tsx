@@ -63,6 +63,7 @@ import {
 import Link from "next/link";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DashboardView = dynamic(() => import("@/components/DashboardView"), {
   ssr: false,
@@ -600,8 +601,16 @@ export default function HomePage() {
         </TooltipProvider>
 
         {/* Secondary navigation panel */}
+        <AnimatePresence>
         {activeTab !== "home" && (
-        <aside className="hidden md:flex fixed left-[68px] top-2 bottom-2 w-[216px] z-40 flex-col bg-background rounded-xl overflow-hidden">
+        <motion.aside
+          key="secondary-panel"
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -12 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          className="hidden md:flex fixed left-[68px] top-2 bottom-2 w-[216px] z-40 flex-col bg-background rounded-xl overflow-hidden"
+        >
           <div className="p-3 pt-5 flex-1 overflow-y-auto">
             {activeTab === "dashboard" && (() => {
               const CONFIGURED = [
@@ -704,20 +713,61 @@ export default function HomePage() {
               </>
             )}
           </div>
-        </aside>
+        </motion.aside>
         )}
+        </AnimatePresence>
 
         {/* Main content */}
-        <div className={`flex-1 ${activeTab === "home" ? "md:ml-[68px]" : "md:ml-[284px]"}`}>
+        <div className={`flex-1 transition-[margin] duration-200 ${activeTab === "home" ? "md:ml-[68px]" : "md:ml-[284px]"}`}>
+      <AnimatePresence mode="wait" initial={false}>
       {activeTab === "dashboard" ? (
-        <DashboardView />
+        <motion.div
+          key="dashboard"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <DashboardView />
+        </motion.div>
       ) : activeTab === "docs" ? (
-        <DocsView selectedProductId={docsProductId} onSelectProduct={setDocsProductId} />
+        <motion.div
+          key="docs"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <DocsView selectedProductId={docsProductId} onSelectProduct={setDocsProductId} />
+        </motion.div>
       ) : activeTab === "settings" ? (
-        <SettingsView section={settingsSection} />
+        <motion.div
+          key="settings"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <SettingsView section={settingsSection} />
+        </motion.div>
       ) : activeTab === "configuration" ? (
-        <ConfigurationView />
+        <motion.div
+          key="configuration"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <ConfigurationView />
+        </motion.div>
       ) : (
+        <motion.div
+          key="home"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
       <div className="my-2 ml-2 mr-2 rounded-xl bg-background h-[calc(100vh-16px)] overflow-hidden flex flex-col">
       <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4">
         <h1 className="text-2xl font-bold text-foreground">Products</h1>
@@ -821,7 +871,9 @@ export default function HomePage() {
         })}
       </div>
       </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Bottom fade gradient */}
       <div

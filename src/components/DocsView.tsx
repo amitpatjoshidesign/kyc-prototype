@@ -620,7 +620,7 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
                   <ul className="space-y-2">
                     {product.features.map((f) => (
                       <li key={f} className="flex items-start gap-2 text-sm text-foreground">
-                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0" />
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-foreground shrink-0" />
                         {f}
                       </li>
                     ))}
@@ -834,14 +834,16 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
 
       {/* Ask Setu AI — full-height panel */}
       {chatCollapsed ? (
-        <button
-          type="button"
-          onClick={() => setChatCollapsed(false)}
-          className="shrink-0 self-start flex items-center justify-center h-8 w-8 mr-2 mt-2 rounded-lg bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors z-40"
-          aria-label="Expand chat"
-        >
-          <SidebarSimple size={16} weight="regular" className="rotate-180" />
-        </button>
+        <div className="w-10 shrink-0 mr-2 flex flex-col bg-background rounded-r-xl overflow-hidden z-40">
+          <button
+            type="button"
+            onClick={() => setChatCollapsed(false)}
+            className="flex items-center justify-center h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Expand chat"
+          >
+            <SidebarSimple size={16} weight="regular" className="rotate-180" />
+          </button>
+        </div>
       ) : (
       <div className="w-[300px] shrink-0 mr-2 flex flex-col bg-background rounded-r-xl overflow-hidden z-40">
         {/* Header */}
