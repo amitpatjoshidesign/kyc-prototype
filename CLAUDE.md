@@ -34,7 +34,7 @@ This is a **Next.js 14** app (App Router) with TypeScript and Tailwind CSS, serv
 3. **Main content** — shifts margin-left depending on whether secondary panel is visible (`md:ml-[68px]` vs `md:ml-[284px]`)
 
 `activeTab` state (`"home" | "dashboard" | "docs" | "settings" | "configuration"`) controls which view renders in main content. All view components are dynamically imported (`next/dynamic`, SSR disabled) with skeleton loading states. Props are passed from `page.tsx` into views:
-- `DocsView` receives `selectedProductId` / `onSelectProduct`
+- `DocsView` receives `selectedProductId` / `onSelectProduct`; it also renders an inline "Ask Setu AI" chat panel in the right column
 - `SettingsView` receives `section`
 
 The `PRODUCTS` constant in `page.tsx` is the single source of truth for the product catalog and is reused in the secondary panel nav for docs/dashboard.
@@ -67,9 +67,13 @@ Components follow the **shadcn/ui** pattern (configured in `components.json`). P
 - `field.tsx` — form field wrapper with label and error (`Field`, `FieldLabel`, `FieldError`)
 - `kbd.tsx` — keyboard shortcut display
 
-Icons: `@phosphor-icons/react` throughout (use `weight="duotone"` for decorative icons, `weight="fill"` for active/selected states, `weight="regular"` for nav items).
+Icons: `@phosphor-icons/react` throughout custom components (use `weight="duotone"` for decorative icons, `weight="fill"` for active/selected states, `weight="regular"` for nav items). `lucide-react` is used only internally by shadcn/ui primitives — do not use it in new components.
 
 Charts: `highcharts` + `highcharts-react-official`, loaded client-side only. Highcharts modules (sankey, variable-pie) are dynamically `require()`d inside a `typeof window !== "undefined"` guard at the top of `DashboardView`.
+
+Animations: `framer-motion` powers tab transitions in `page.tsx`. `AnimatePresence mode="wait"` wraps the main content area so tabs cross-fade. The secondary panel slides in/out with `motion.aside`. Use `AnimatePresence` + keyed `motion.div` for any new animated tab/view transitions.
+
+`canvas-confetti` fires on BBPS KYC completion (`src/app/kyc/bbps/page.tsx`).
 
 All view/page components use `"use client"` — there are no server components beyond `layout.tsx`.
 
