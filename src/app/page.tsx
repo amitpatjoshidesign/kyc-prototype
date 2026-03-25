@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,8 @@ import {
   Moon,
   Sun,
   SignOut,
+  Faders,
+  ArrowCounterClockwise,
 } from "@phosphor-icons/react";
 import {
   Tooltip,
@@ -64,6 +66,7 @@ import Link from "next/link";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+import { OnboardingSurvey } from "@/components/OnboardingSurvey";
 
 const DashboardView = dynamic(() => import("@/components/DashboardView"), {
   ssr: false,
@@ -94,6 +97,17 @@ const SettingsView = dynamic(() => import("@/components/SettingsView"), {
 });
 
 const ConfigurationView = dynamic(() => import("@/components/ConfigurationView"), {
+  ssr: false,
+  loading: () => (
+    <div className="px-6 pt-6 pb-16">
+      <div className="h-8 w-48 bg-muted rounded animate-pulse mb-6" />
+      <div className="h-12 bg-muted rounded animate-pulse mb-8" />
+      <div className="h-64 bg-muted rounded-lg animate-pulse" />
+    </div>
+  ),
+});
+
+const EsignConfigurationView = dynamic(() => import("@/components/EsignConfigurationView"), {
   ssr: false,
   loading: () => (
     <div className="px-6 pt-6 pb-16">
@@ -207,6 +221,12 @@ const PRODUCTS = [
       },
     ],
   },
+];
+
+const ESIGN_CONFIG_STEPS = [
+  "Configure product",
+  "Test product",
+  "Add details for production",
 ];
 
 /* ── Login overlay content ── */
@@ -387,8 +407,11 @@ export default function HomePage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [surveyOpen, setSurveyOpen] = useState(false);
   const [showKycBanner, setShowKycBanner] = useState(false);
-  const [activeTab, setActiveTab] = useState<"home" | "dashboard" | "docs" | "settings" | "configuration">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "products" | "dashboard" | "docs" | "settings" | "configuration">("home");
+  const [configProduct, setConfigProduct] = useState<"upi" | "esign">("upi");
+  const [esignActivated, setEsignActivated] = useState(false);
   const [filter, setFilter] = useState<"All" | "Payments" | "Data">("All");
   const [search, setSearch] = useState("");
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -397,6 +420,19 @@ export default function HomePage() {
   const [docsProductId, setDocsProductId] = useState("bbps");
   const [dashboardProductId, setDashboardProductId] = useState("upi");
   const [settingsSection, setSettingsSection] = useState("Account");
+  const [configStep, setConfigStep] = useState(0);
+  const [homeProductId, setHomeProductId] = useState<string>("esign");
+
+  const CONFIG_STEPS = [
+    "Environment",
+    "API Credentials",
+    "Webhooks",
+    "Settlement Account",
+    "Transaction Limits",
+    "Payment Modes",
+    "VPA Handle",
+    "Go-Live Checklist",
+  ];
   const pendingHref = useRef<string | null>(null);
 
   useEffect(() => {
@@ -414,6 +450,9 @@ export default function HomePage() {
     const auth = localStorage.getItem("bridge_auth");
     if (auth === "true") {
       setEmail(localStorage.getItem("bridge_email"));
+    }
+    if (localStorage.getItem("esign_activated") === "true") {
+      setEsignActivated(true);
     }
   }, []);
 
@@ -445,6 +484,30 @@ export default function HomePage() {
     }, 500);
   }
 
+  function handleStartEsign() {
+    const auth = localStorage.getItem("bridge_auth");
+    if (!auth) {
+      pendingHref.current = "__esign__";
+      setLoginOpen(true);
+      return;
+    }
+    localStorage.setItem("esign_activated", "true");
+    setEsignActivated(true);
+    setConfigProduct("esign");
+    setConfigStep(0);
+    setActiveTab("configuration");
+  }
+
+  function navigatePending() {
+    const href = pendingHref.current ?? "/kyc";
+    pendingHref.current = null;
+    if (href === "__esign__") {
+      handleStartEsign();
+    } else {
+      router.push(href);
+    }
+  }
+
   function handleStartClick(href: string) {
     const auth = localStorage.getItem("bridge_auth");
     if (auth) {
@@ -457,19 +520,37 @@ export default function HomePage() {
 
   function handleLoginSuccess() {
     setLoginOpen(false);
-    const href = pendingHref.current ?? "/kyc";
-    pendingHref.current = null;
-    router.push(href);
+    const storedEmail = localStorage.getItem("bridge_email");
+    setEmail(storedEmail);
+    const surveyed = localStorage.getItem("bridge_survey_completed");
+    if (!surveyed) {
+      setSurveyOpen(true);
+    } else {
+      navigatePending();
+    }
+  }
+
+  function handleSurveyComplete(data: Record<string, string>) {
+    localStorage.setItem("bridge_survey", JSON.stringify(data));
+    localStorage.setItem("bridge_survey_completed", "true");
+    setSurveyOpen(false);
+    navigatePending();
+  }
+
+  function handleSurveySkip() {
+    localStorage.setItem("bridge_survey_completed", "skipped");
+    setSurveyOpen(false);
+    navigatePending();
   }
 
   if (!mounted) return null;
 
-  const NAV_ITEMS = [
-    { icon: House, label: "Home", tab: "home" as const },
-    { icon: Speedometer, label: "Dashboard", tab: "dashboard" as const },
-    { icon: BookOpen, label: "Docs", tab: "docs" as const },
-    { icon: SquaresFour, label: "Products" },
-    { icon: PlusSquare, label: "Create" },
+  const NAV_ITEMS: { icon: React.ElementType; label: string; tab?: typeof activeTab }[] = [
+    { icon: House, label: "Home", tab: "home" },
+    { icon: Speedometer, label: "Dashboard", tab: "dashboard" },
+    { icon: BookOpen, label: "Docs", tab: "docs" },
+    { icon: SquaresFour, label: "Products", tab: "products" },
+    { icon: Faders, label: "Configuration", tab: "configuration" },
   ];
 
   const logoSvg = (
@@ -506,10 +587,10 @@ export default function HomePage() {
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    onClick={() => item.tab && setActiveTab(item.tab)}
+                    onClick={() => item.tab ? setActiveTab(item.tab) : setActiveTab("home")}
                     className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
                       isActive
-                        ? "bg-foreground/15 text-foreground"
+                        ? "bg-sidebar-accent text-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-foreground/8"
                     }`}
                     aria-label={item.label}
@@ -542,6 +623,24 @@ export default function HomePage() {
 
           {/* Bottom: theme switcher + account */}
           <div className="flex flex-col items-center gap-1 pb-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("billing_pack_id");
+                    localStorage.removeItem("billing_purchased_at");
+                    localStorage.removeItem("esign_credits");
+                    window.location.reload();
+                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Reset credits"
+                >
+                  <ArrowCounterClockwise size={20} weight="regular" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Reset credits</TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -602,7 +701,7 @@ export default function HomePage() {
 
         {/* Secondary navigation panel */}
         <AnimatePresence>
-        {activeTab !== "home" && (
+        {((activeTab !== "home" && activeTab !== "products") || (activeTab === "home" && esignActivated)) && (
         <motion.aside
           key="secondary-panel"
           initial={{ opacity: 0, x: -12 }}
@@ -612,6 +711,83 @@ export default function HomePage() {
           className="hidden md:flex fixed left-[68px] top-2 bottom-2 w-[216px] z-40 flex-col bg-background rounded-xl overflow-hidden"
         >
           <div className="p-3 pt-5 flex-1 overflow-y-auto">
+            {activeTab === "home" && esignActivated && (() => {
+              const configDone = localStorage.getItem("esign_config_completed") === "true";
+
+              // Build the activated product list (extensible as more products are added)
+              const activatedProducts = [
+                {
+                  id: "insights",
+                  title: "Insights",
+                  icon: ChartLine,
+                  complete: true,
+                },
+                {
+                  id: "esign",
+                  title: "eSign Gateway",
+                  icon: PenNib,
+                  complete: configDone,
+                },
+              ];
+
+              const inUse = activatedProducts.filter((p) => p.complete);
+              const inProgress = activatedProducts.filter((p) => !p.complete);
+
+              return (
+                <>
+                  {inUse.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 px-2">Products in use</p>
+                      <div className="space-y-0.5">
+                        {inUse.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setHomeProductId(item.id)}
+                              className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                homeProductId === item.id
+                                  ? "bg-sidebar-accent text-foreground"
+                                  : "text-foreground hover:bg-muted"
+                              }`}
+                            >
+                              <Icon size={16} weight="regular" className="shrink-0" />
+                              {item.title}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {inProgress.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 px-2">Continue setup</p>
+                      <div className="space-y-0.5">
+                        {inProgress.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setHomeProductId(item.id)}
+                              className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                homeProductId === item.id
+                                  ? "bg-sidebar-accent text-foreground"
+                                  : "text-foreground hover:bg-muted"
+                              }`}
+                            >
+                              <Icon size={16} weight="regular" className="shrink-0" />
+                              {item.title}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
             {activeTab === "dashboard" && (() => {
               const CONFIGURED = [
                 { id: "upi", title: "UPI", category: "PAYMENTS" },
@@ -679,7 +855,7 @@ export default function HomePage() {
               <>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-2">Settings</p>
                 <div className="space-y-0.5">
-                  {["Account", "Team", "API Keys", "Webhooks", "Billing"].map((item) => (
+                  {["Account", "Credits & usage", "Team", "API Keys", "Webhooks"].map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -698,15 +874,38 @@ export default function HomePage() {
             )}
             {activeTab === "configuration" && (
               <>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-2">Configuration</p>
-                <div className="space-y-0.5">
-                  {["UPI", "Payment Gateway", "Payouts"].map((item) => (
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-2">Configuration</p>
+                {/* Product switcher */}
+                <div className="flex gap-1 mb-3 px-1">
+                  {(["upi", "esign"] as const).map((p) => (
                     <button
-                      key={item}
+                      key={p}
                       type="button"
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                      onClick={() => { setConfigProduct(p); setConfigStep(0); }}
+                      className={`flex-1 text-center py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        configProduct === p
+                          ? "bg-sidebar-accent text-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
                     >
-                      {item}
+                      {p === "upi" ? "UPI" : "eSign"}
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-0.5">
+                  {(configProduct === "upi" ? CONFIG_STEPS : ESIGN_CONFIG_STEPS).map((label, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setConfigStep(i)}
+                      className={`w-full text-left flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                        configStep === i
+                          ? "bg-sidebar-accent text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <span className="tabular-nums text-[11px] w-3.5 shrink-0 text-muted-foreground">{i + 1}</span>
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -718,7 +917,7 @@ export default function HomePage() {
         </AnimatePresence>
 
         {/* Main content */}
-        <div className={`flex-1 transition-[margin] duration-200 ${activeTab === "home" ? "md:ml-[68px]" : "md:ml-[284px]"}`}>
+        <div className={`flex-1 min-w-0 transition-[margin] duration-200 ${(activeTab === "home" && !esignActivated) || activeTab === "products" ? "md:ml-[68px]" : "md:ml-[284px]"}`}>
       <AnimatePresence mode="wait" initial={false}>
       {activeTab === "dashboard" ? (
         <motion.div
@@ -752,17 +951,21 @@ export default function HomePage() {
         </motion.div>
       ) : activeTab === "configuration" ? (
         <motion.div
-          key="configuration"
+          key={`configuration-${configProduct}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          <ConfigurationView />
+          {configProduct === "esign" ? (
+            <EsignConfigurationView currentStep={configStep} onStepChange={setConfigStep} />
+          ) : (
+            <ConfigurationView currentStep={configStep} onStepChange={setConfigStep} />
+          )}
         </motion.div>
-      ) : (
+      ) : activeTab === "products" ? (
         <motion.div
-          key="home"
+          key="products"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
@@ -770,12 +973,15 @@ export default function HomePage() {
         >
       <div className="my-2 ml-2 mr-2 rounded-xl bg-background h-[calc(100vh-16px)] overflow-hidden flex flex-col">
       <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4">
-        <h1 className="text-2xl font-bold text-foreground">Products</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Choose a product to get started with Bridge
-        </p>
+        <div className="max-w-[1400px] mx-auto">
+          <h1 className="text-2xl font-bold text-foreground">Products</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose a product to get started with Bridge
+          </p>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto px-6 pb-16">
+        <div className="max-w-[1400px] mx-auto">
 
         {!bannerDismissed && (
           <div className="mb-6 rounded-2xl bg-muted p-4 sm:p-6">
@@ -798,7 +1004,7 @@ export default function HomePage() {
           </div>
         )}
 
-{PRODUCTS.filter((group) => filter === "All" || group.category === filter.toUpperCase()).map((group) => {
+        {PRODUCTS.filter((group) => filter === "All" || group.category === filter.toUpperCase()).map((group) => {
           const filteredItems = search
             ? group.items.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()))
             : group.items;
@@ -812,6 +1018,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredItems.map((product) => {
                   const Icon = product.icon;
+                  const isEsign = product.id === "esign";
                   return (
                     <Card
                       key={product.title}
@@ -841,23 +1048,48 @@ export default function HomePage() {
                         </div>
                       </CardContent>
                       <CardFooter className="p-4 pt-0 gap-2">
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="w-full group"
-                          onClick={() => handleStartClick(product.href)}
-                        >
-                          Start using {product.title}
-                          <ArrowRight size={16} className="opacity-0 -ml-5 transition-all group-hover:opacity-100 group-hover:ml-0" />
-                        </Button>
-                        {product.title === "UPI" && (
-                          <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={() => setActiveTab("configuration")}
-                          >
-                            Configure
-                          </Button>
+                        {isEsign ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className="flex-1 group"
+                              onClick={handleStartEsign}
+                            >
+                              {esignActivated ? "Continue configuring" : "Start using eSign"}
+                              <ArrowRight size={16} className="opacity-0 -ml-5 transition-all group-hover:opacity-100 group-hover:ml-0" />
+                            </Button>
+                            {esignActivated && (
+                              <Button
+                                variant="outline"
+                                size="lg"
+                                onClick={() => setActiveTab("home")}
+                              >
+                                Workspace
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className="w-full group"
+                              onClick={() => handleStartClick(product.href)}
+                            >
+                              Start using {product.title}
+                              <ArrowRight size={16} className="opacity-0 -ml-5 transition-all group-hover:opacity-100 group-hover:ml-0" />
+                            </Button>
+                            {product.title === "UPI" && (
+                              <Button
+                                variant="outline"
+                                size="lg"
+                                onClick={() => setActiveTab("configuration")}
+                              >
+                                Configure
+                              </Button>
+                            )}
+                          </>
                         )}
                       </CardFooter>
                     </Card>
@@ -865,10 +1097,166 @@ export default function HomePage() {
                 })}
               </div>
             </div>
-
           </div>
           );
         })}
+        </div>
+      </div>
+      </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="home"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+      <div className="my-2 ml-2 mr-2 rounded-xl bg-background h-[calc(100vh-16px)] overflow-hidden flex flex-col">
+      <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4">
+        <div className="max-w-[1400px] mx-auto">
+          <h1 className="text-2xl font-bold text-foreground">Home</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your activated products and workspace
+          </p>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-6 pb-16">
+        <div className="max-w-[1400px] mx-auto">
+          {!esignActivated ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                <SquaresFour size={28} weight="duotone" className="text-muted-foreground" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground mb-2">No products activated yet</h2>
+              <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+                Go to Products to browse and activate products for your workspace.
+              </p>
+              <Button onClick={() => setActiveTab("products")}>Browse products</Button>
+            </div>
+          ) : homeProductId === "esign" ? (() => {
+            const kycDone = localStorage.getItem("kyc_completed") === "true";
+            const configDone = localStorage.getItem("esign_config_completed") === "true";
+            const credits = localStorage.getItem("esign_credits");
+            const creditLabel: Record<string, string> = { "1l": "Starter (1 Lakh)", "3l": "Growth (3 Lakhs)", "5l": "Scale (5 Lakhs)" };
+            const rows = [
+              {
+                step: "KYC",
+                statusLabel: kycDone ? "Complete" : "Not started",
+                statusClass: kycDone
+                  ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
+                  : "bg-muted text-muted-foreground",
+                cta: kycDone ? null : (
+                  <Button size="sm" variant="outline" onClick={() => router.push("/kyc")}>
+                    Start KYC
+                  </Button>
+                ),
+                ctaDone: kycDone ? (
+                  <Button size="sm" variant="outline" disabled>Done ✓</Button>
+                ) : null,
+              },
+              {
+                step: "Configure",
+                statusLabel: configDone ? "Complete" : `In progress (${configStep}/3)`,
+                statusClass: configDone
+                  ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
+                  : configStep > 0
+                  ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400"
+                  : "bg-muted text-muted-foreground",
+                cta: configDone ? null : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setConfigProduct("esign"); setActiveTab("configuration"); }}
+                  >
+                    Configure
+                  </Button>
+                ),
+                ctaDone: configDone ? (
+                  <Button size="sm" variant="outline" disabled>Done ✓</Button>
+                ) : null,
+              },
+              {
+                step: "Buy Credits",
+                statusLabel: credits ? creditLabel[credits] ?? credits : "Not purchased",
+                statusClass: credits
+                  ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
+                  : "bg-muted text-muted-foreground",
+                cta: !credits ? (
+                  <Button size="sm" variant="outline" onClick={() => router.push("/esign/credits")}>
+                    Buy Credits
+                  </Button>
+                ) : null,
+                ctaDone: credits ? (
+                  <Button size="sm" variant="outline" disabled>Done ✓</Button>
+                ) : null,
+              },
+            ];
+            return (
+              <div className="max-w-xl">
+                <Card className="shadow-none border border-border/40">
+                  <CardHeader className="p-5 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-950">
+                        <PenNib size={16} weight="duotone" className="text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <CardTitle className="text-base">eSign Gateway</CardTitle>
+                    </div>
+                    <CardDescription className="text-xs mt-1">3-step activation</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-border">
+                      {rows.map((row) => (
+                        <div key={row.step} className="flex items-center justify-between px-5 py-3 gap-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-foreground">{row.step}</span>
+                            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${row.statusClass}`}>
+                              {row.statusLabel}
+                            </span>
+                          </div>
+                          <div>{row.cta ?? row.ctaDone}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })() : (
+            <div className="max-w-xl">
+              <Card className="shadow-none border border-border/40">
+                <CardHeader className="p-5 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-950">
+                      <ChartLine size={16} weight="duotone" className="text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <CardTitle className="text-base">Insights</CardTitle>
+                  </div>
+                  <CardDescription className="text-xs mt-1">Live — financial data analytics</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border">
+                    {[
+                      { step: "KYC", status: "Complete", cls: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400" },
+                      { step: "Configure", status: "Complete", cls: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400" },
+                      { step: "Go Live", status: "Live", cls: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400" },
+                    ].map((row) => (
+                      <div key={row.step} className="flex items-center justify-between px-5 py-3 gap-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-foreground">{row.step}</span>
+                          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${row.cls}`}>
+                            {row.status}
+                          </span>
+                        </div>
+                        <Button size="sm" variant="outline" disabled>Done ✓</Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
       </div>
         </motion.div>
@@ -889,6 +1277,13 @@ export default function HomePage() {
           <LoginOverlay onSuccess={handleLoginSuccess} />
         </DialogContent>
       </Dialog>
+
+      {/* Onboarding survey */}
+      <OnboardingSurvey
+        open={surveyOpen}
+        onComplete={handleSurveyComplete}
+        onSkip={handleSurveySkip}
+      />
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { X } from "lucide-react"
+import { X } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 
@@ -43,12 +43,10 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      <div className="flex justify-end -mb-2">
-        <DialogPrimitive.Close className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:border-ring focus:ring-ring/20 focus:ring-[3px] disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-          <X className="h-4 w-4" />
+        <DialogPrimitive.Close className="absolute right-3 top-3 z-10 rounded-md p-1 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none">
+          <X size={16} weight="bold" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
-      </div>
       {children}
     </DialogPrimitive.Content>
   </DialogPortal>

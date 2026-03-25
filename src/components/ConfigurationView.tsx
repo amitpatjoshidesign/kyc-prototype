@@ -22,11 +22,8 @@ import {
   Key,
   Lightning,
   QrCode,
-  Repeat,
   Shield,
   WarningCircle,
-  Check,
-  Clock,
   RocketLaunch,
 } from "@phosphor-icons/react";
 
@@ -519,73 +516,38 @@ function StepGoLive({ completedSteps }: { completedSteps: Set<number> }) {
 }
 
 /* ── Main Configuration View ── */
-export default function ConfigurationView() {
-  const [currentStep, setCurrentStep] = useState(0);
+export default function ConfigurationView({
+  currentStep,
+  onStepChange,
+}: {
+  currentStep: number;
+  onStepChange: (step: number) => void;
+}) {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [env, setEnv] = useState("sandbox");
   const [authMode, setAuthMode] = useState("OAuth 2.0");
 
   function goNext() {
     setCompletedSteps((prev) => new Set([...prev, currentStep]));
-    setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+    onStepChange(Math.min(currentStep + 1, STEPS.length - 1));
   }
 
   function goPrev() {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    onStepChange(Math.max(currentStep - 1, 0));
   }
 
   return (
-    <div className="px-6 pt-6 pb-16">
-      <div className="mb-6">
+    <div className="my-2 ml-2 mr-2 rounded-xl bg-background px-6 pt-6 pb-16">
+      <div className="max-w-[1400px] mx-auto">
+      <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">UPI Configuration</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Set up your UPI integration step by step
         </p>
       </div>
 
-      {/* Step Indicator */}
-      <div className="mb-8">
-        <div className="flex items-center gap-0">
-          {STEPS.map((step, i) => {
-            const isDone = completedSteps.has(i);
-            const isCurrent = currentStep === i;
-            return (
-              <div key={i} className="flex items-center flex-1 last:flex-none">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(i)}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                      isCurrent
-                        ? "bg-foreground text-background"
-                        : isDone
-                        ? "bg-emerald-500 text-white"
-                        : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/20"
-                    }`}
-                  >
-                    {isDone && !isCurrent ? <Check size={14} weight="bold" /> : i + 1}
-                  </div>
-                  <span className={`text-[10px] font-medium hidden sm:block ${
-                    isCurrent ? "text-foreground" : "text-muted-foreground"
-                  }`}>
-                    {step.title}
-                  </span>
-                </button>
-                {i < STEPS.length - 1 && (
-                  <div className={`h-0.5 flex-1 mx-1 rounded-full ${
-                    isDone ? "bg-emerald-500" : "bg-muted"
-                  }`} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Step Content */}
-      <div className="min-h-[400px]">
+      <div>
         {currentStep === 0 && <StepEnvironment env={env} setEnv={setEnv} />}
         {currentStep === 1 && <StepCredentials authMode={authMode} setAuthMode={setAuthMode} />}
         {currentStep === 2 && <StepWebhooks />}
@@ -614,6 +576,7 @@ export default function ConfigurationView() {
         ) : (
           <div />
         )}
+      </div>
       </div>
     </div>
   );

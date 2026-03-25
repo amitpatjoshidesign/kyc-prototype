@@ -618,9 +618,9 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
                 <CardContent className="p-0 space-y-3">
                   <h3 className="text-base font-semibold text-foreground">Key Features</h3>
                   <ul className="space-y-2">
-                    {product.features.map((f) => (
+                    {product.features.map((f, i) => (
                       <li key={f} className="flex items-start gap-2 text-sm text-foreground">
-                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-foreground shrink-0" />
+                        <span className="mt-0.5 shrink-0 text-xs font-semibold text-muted-foreground w-4 text-right">{i + 1}.</span>
                         {f}
                       </li>
                     ))}
@@ -630,7 +630,7 @@ export default function DocsView({ selectedProductId: externalProductId, onSelec
               <Card className="shadow-none border-0 bg-transparent">
                 <CardContent className="p-0 space-y-3">
                   <h3 className="text-base font-semibold text-foreground">Use Cases</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {product.useCases.map((uc) => (
                       <div
                         key={uc}

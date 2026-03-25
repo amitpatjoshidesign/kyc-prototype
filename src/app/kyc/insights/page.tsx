@@ -121,9 +121,10 @@ interface BusinessDetailsData {
   businessDescription: string;
   merchantDbaName: string;
   acceptPayments: string;
-  websiteLink: string;
-  appPlatform: string;
-  appLink: string;
+  platformAndroid: string;
+  platformIphone: string;
+  platformWebsite: string;
+  platformOther: string;
   registrationType: string;
 }
 
@@ -162,9 +163,10 @@ const initialFormData: AAFormData = {
     businessDescription: "",
     merchantDbaName: "",
     acceptPayments: "",
-    websiteLink: "",
-    appPlatform: "",
-    appLink: "",
+    platformAndroid: "",
+    platformIphone: "",
+    platformWebsite: "",
+    platformOther: "",
     registrationType: "",
   },
   signatory: {
@@ -222,12 +224,6 @@ const REGULATOR_DOC_OPTIONS = [
   { value: "irdai", label: "IRDAI" },
 ];
 
-const APP_PLATFORM_OPTIONS = [
-  { value: "android", label: "Android" },
-  { value: "iphone", label: "iPhone" },
-  { value: "website", label: "Website" },
-  { value: "other", label: "Other" },
-];
 
 // ── Verification state ──
 
@@ -368,6 +364,7 @@ export default function InsightsKYC() {
   const [skpiModalState, setSkpiModalState] = useState<"idle" | "loading" | "results">("idle");
   const [skpiFetchedData, setSkpiFetchedData] = useState<Record<string, string> | null>(null);
   const [kycSubmitted, setKycSubmitted] = useState(false);
+  const [signatoryUploadMethod, setSignatoryUploadMethod] = useState<"digilocker" | "manual" | "">("");
 
   useEffect(() => {
     localStorage.setItem("kyc_started", "true");
@@ -662,13 +659,18 @@ export default function InsightsKYC() {
             />
           </div>
           <div className="col-span-1 md:col-span-2">
-            <TextField
-              label="Merchant DBA name"
-              value={d.merchantDbaName}
-              onChange={(v) => updateField("businessDetails", "merchantDbaName", v)}
-              placeholder="Doing Business As name (prefilled from GST API)"
-              icon={<Storefront size={16} />}
-            />
+            <Field>
+              <FieldLabel>Merchant DBA name</FieldLabel>
+              <InputGroup>
+                <InputGroupAddon align="inline-start"><Storefront size={16} /></InputGroupAddon>
+                <InputGroupInput
+                  value={d.merchantDbaName}
+                  onChange={(e) => updateField("businessDetails", "merchantDbaName", e.target.value)}
+                  placeholder="Doing Business As name"
+                />
+              </InputGroup>
+              <p className="text-xs text-muted-foreground mt-1.5">We&apos;ll try to pre-fill this from your GST registration</p>
+            </Field>
           </div>
           <SelectField
             label="Accept payments"
@@ -677,7 +679,6 @@ export default function InsightsKYC() {
             options={[
               { value: "online", label: "Online" },
               { value: "offline", label: "Offline" },
-              { value: "both", label: "Both" },
             ]}
           />
           <SelectField
@@ -687,37 +688,42 @@ export default function InsightsKYC() {
             options={REGISTRATION_TYPE_OPTIONS}
           />
 
-          {(d.acceptPayments === "online" || d.acceptPayments === "both") && (
-            <>
-              <TextField
-                label="Website link"
-                value={d.websiteLink}
-                onChange={(v) => updateField("businessDetails", "websiteLink", v)}
-                placeholder="https://example.com"
-                icon={<Globe size={16} />}
-                verification={getVerification(d.websiteLink, isValidURL)}
-                error={getValidationError(d.websiteLink, isValidURL, "Enter a valid URL")}
-              />
-              <SelectField
-                label="App platform"
-                value={d.appPlatform}
-                onChange={(v) => updateField("businessDetails", "appPlatform", v)}
-                options={APP_PLATFORM_OPTIONS}
-              />
-              {d.appPlatform && (
-                <div className="col-span-1 md:col-span-2">
-                  <TextField
-                    label="App link"
-                    value={d.appLink}
-                    onChange={(v) => updateField("businessDetails", "appLink", v)}
-                    placeholder="https://play.google.com/store/apps/..."
-                    icon={<Globe size={16} />}
-                    verification={getVerification(d.appLink, isValidURL)}
-                    error={getValidationError(d.appLink, isValidURL, "Enter a valid URL")}
-                  />
-                </div>
-              )}
-            </>
+          {d.acceptPayments === "online" && (
+            <div className="col-span-1 md:col-span-2 space-y-4">
+              <h4 className="text-sm font-medium text-foreground">Provide links for the platforms where you accept payments</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
+                <TextField
+                  label="Android app link"
+                  value={d.platformAndroid}
+                  onChange={(v) => updateField("businessDetails", "platformAndroid", v)}
+                  placeholder="https://play.google.com/..."
+                  icon={<Globe size={16} />}
+                />
+                <TextField
+                  label="iPhone app link"
+                  value={d.platformIphone}
+                  onChange={(v) => updateField("businessDetails", "platformIphone", v)}
+                  placeholder="https://apps.apple.com/..."
+                  icon={<Globe size={16} />}
+                />
+                <TextField
+                  label="Website"
+                  value={d.platformWebsite}
+                  onChange={(v) => updateField("businessDetails", "platformWebsite", v)}
+                  placeholder="https://example.com"
+                  icon={<Globe size={16} />}
+                  verification={d.platformWebsite ? getVerification(d.platformWebsite, isValidURL) : "default"}
+                  error={getValidationError(d.platformWebsite, isValidURL, "Enter a valid URL")}
+                />
+                <TextField
+                  label="Other"
+                  value={d.platformOther}
+                  onChange={(v) => updateField("businessDetails", "platformOther", v)}
+                  placeholder="Any other platform link"
+                  icon={<Globe size={16} />}
+                />
+              </div>
+            </div>
           )}
         </div>
       </section>
@@ -768,74 +774,113 @@ export default function InsightsKYC() {
         </div>
 
         <h3 className="text-sm font-semibold text-foreground pt-2">Proof of address</h3>
-        <SelectField
-          label="Document type"
-          value={d.proofType}
-          onChange={(v) => updateField("signatory", "proofType", v)}
-          options={[
-            { value: "aadhaar", label: "Aadhaar" },
-            { value: "passport", label: "Passport" },
-            { value: "voter_id", label: "Voter ID" },
-            { value: "dl", label: "Driving Licence" },
-          ]}
-        />
 
-        {d.proofType === "aadhaar" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
-            <FileUploadField
-              label="Aadhaar front"
-              file={d.aadhaarFront}
-              helperText="Upload front side (masked)"
-              onFileSelect={(f) => updateField("signatory", "aadhaarFront", f)}
-              onClear={() => updateField("signatory", "aadhaarFront", null)}
-            />
-            <FileUploadField
-              label="Aadhaar back"
-              file={d.aadhaarBack}
-              helperText="Upload back side"
-              onFileSelect={(f) => updateField("signatory", "aadhaarBack", f)}
-              onClear={() => updateField("signatory", "aadhaarBack", null)}
-            />
+        {/* Upload method toggle */}
+        <div className="flex gap-2">
+          {(["digilocker", "manual"] as const).map((method) => {
+            const isSelected = signatoryUploadMethod === method;
+            const label = method === "digilocker" ? "Digilocker" : "Manual upload";
+            return (
+              <button
+                key={method}
+                type="button"
+                onClick={() => setSignatoryUploadMethod(method)}
+                className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors ${
+                  isSelected
+                    ? "border-primary bg-secondary text-primary"
+                    : "border-border bg-card text-muted-foreground hover:border-ring"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Digilocker path */}
+        {signatoryUploadMethod === "digilocker" && (
+          <div className="rounded-lg border border-border p-5 space-y-3">
+            <h4 className="text-sm font-semibold text-foreground">Connect with Digilocker</h4>
+            <p className="text-sm text-muted-foreground">
+              Your address details will be securely fetched from Digilocker and shared with the admin and Bridge for verification.
+            </p>
+            <Button variant="outline">Connect with Digilocker</Button>
           </div>
         )}
 
-        {d.proofType === "passport" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
-            <FileUploadField
-              label="Passport front page"
-              file={d.passportFront}
-              helperText="Upload front page"
-              onFileSelect={(f) => updateField("signatory", "passportFront", f)}
-              onClear={() => updateField("signatory", "passportFront", null)}
+        {/* Manual upload path */}
+        {signatoryUploadMethod === "manual" && (
+          <>
+            <SelectField
+              label="Document type"
+              value={d.proofType}
+              onChange={(v) => updateField("signatory", "proofType", v)}
+              options={[
+                { value: "aadhaar", label: "Aadhaar" },
+                { value: "passport", label: "Passport" },
+                { value: "voter_id", label: "Voter ID" },
+                { value: "dl", label: "Driving Licence" },
+              ]}
             />
-            <FileUploadField
-              label="Passport last page"
-              file={d.passportLastPage}
-              helperText="Upload last page"
-              onFileSelect={(f) => updateField("signatory", "passportLastPage", f)}
-              onClear={() => updateField("signatory", "passportLastPage", null)}
-            />
-          </div>
-        )}
 
-        {d.proofType === "voter_id" && (
-          <FileUploadField
-            label="Voter ID"
-            file={d.voterId}
-            helperText="Upload Voter ID"
-            onFileSelect={(f) => updateField("signatory", "voterId", f)}
-            onClear={() => updateField("signatory", "voterId", null)}
-          />
-        )}
+            {d.proofType === "aadhaar" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
+                <FileUploadField
+                  label="Aadhaar front"
+                  file={d.aadhaarFront}
+                  helperText="Please ensure the first 8 digits of your Aadhaar number are masked"
+                  onFileSelect={(f) => updateField("signatory", "aadhaarFront", f)}
+                  onClear={() => updateField("signatory", "aadhaarFront", null)}
+                />
+                <FileUploadField
+                  label="Aadhaar back"
+                  file={d.aadhaarBack}
+                  helperText="Upload back side"
+                  onFileSelect={(f) => updateField("signatory", "aadhaarBack", f)}
+                  onClear={() => updateField("signatory", "aadhaarBack", null)}
+                />
+              </div>
+            )}
 
-        {d.proofType === "dl" && (
-          <FileUploadField
-            label="Driving Licence"
-            file={d.dl}
-            helperText="Upload Driving Licence"
-            onFileSelect={(f) => updateField("signatory", "dl", f)}
-            onClear={() => updateField("signatory", "dl", null)}
-          />
+            {d.proofType === "passport" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
+                <FileUploadField
+                  label="Passport front page"
+                  file={d.passportFront}
+                  helperText="Upload front page"
+                  onFileSelect={(f) => updateField("signatory", "passportFront", f)}
+                  onClear={() => updateField("signatory", "passportFront", null)}
+                />
+                <FileUploadField
+                  label="Passport last page"
+                  file={d.passportLastPage}
+                  helperText="Upload last page"
+                  onFileSelect={(f) => updateField("signatory", "passportLastPage", f)}
+                  onClear={() => updateField("signatory", "passportLastPage", null)}
+                />
+              </div>
+            )}
+
+            {d.proofType === "voter_id" && (
+              <FileUploadField
+                label="Voter ID"
+                file={d.voterId}
+                helperText="Upload Voter ID"
+                onFileSelect={(f) => updateField("signatory", "voterId", f)}
+                onClear={() => updateField("signatory", "voterId", null)}
+              />
+            )}
+
+            {d.proofType === "dl" && (
+              <FileUploadField
+                label="Driving Licence"
+                file={d.dl}
+                helperText="Upload Driving Licence"
+                onFileSelect={(f) => updateField("signatory", "dl", f)}
+                onClear={() => updateField("signatory", "dl", null)}
+              />
+            )}
+          </>
         )}
       </section>
     );
@@ -941,9 +986,10 @@ export default function InsightsKYC() {
             { label: "Business description", value: bd.businessDescription },
             { label: "Merchant DBA name", value: bd.merchantDbaName },
             { label: "Accept payments", value: bd.acceptPayments },
-            ...(bd.websiteLink ? [{ label: "Website link", value: bd.websiteLink }] : []),
-            ...(bd.appPlatform ? [{ label: "App platform", value: APP_PLATFORM_OPTIONS.find((o) => o.value === bd.appPlatform)?.label || bd.appPlatform }] : []),
-            ...(bd.appLink ? [{ label: "App link", value: bd.appLink }] : []),
+            ...(bd.platformAndroid ? [{ label: "Android app link", value: bd.platformAndroid }] : []),
+            ...(bd.platformIphone ? [{ label: "iPhone app link", value: bd.platformIphone }] : []),
+            ...(bd.platformWebsite ? [{ label: "Website", value: bd.platformWebsite }] : []),
+            ...(bd.platformOther ? [{ label: "Other platform", value: bd.platformOther }] : []),
             { label: "Registration type", value: bdRegTypeLabel },
           ]}
         />

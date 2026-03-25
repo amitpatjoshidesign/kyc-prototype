@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MagnifyingGlass, CalendarBlank, ArrowUp, ArrowDown } from "@phosphor-icons/react";
+import { AIInsightsSummary } from "@/components/AIInsightsSummary";
 
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
@@ -66,8 +67,20 @@ function getChartTheme(isDark: boolean) {
   };
 }
 
+/* ── Time multipliers ── */
+const TIME_MULTIPLIERS: Record<string, number> = {
+  "Last 7 days": 1,
+  "Last 30 days": 4.3,
+  "Last 90 days": 12.9,
+  "Custom": 4.3,
+};
+
+function scale(base: number, multiplier: number) {
+  return Math.round(base * multiplier);
+}
+
 /* ── Chart configs ── */
-function paymentAppsChart(isDark: boolean): Highcharts.Options {
+function paymentAppsChart(isDark: boolean, multiplier: number): Highcharts.Options {
   const theme = getChartTheme(isDark);
   return {
     ...theme,
@@ -104,12 +117,12 @@ function paymentAppsChart(isDark: boolean): Highcharts.Options {
         type: "variablepie" as const,
         name: "Transactions",
         data: [
-          { name: "PhonePe", y: 185200, z: 185, color: "#84E3F0E6" },   // setu-brand-400 / 90%
-          { name: "Google Pay", y: 142800, z: 143, color: "#818cf8E6" }, // indigo-400 / 90%
-          { name: "Paytm", y: 78300, z: 78, color: "#fb923cE6" },       // orange-400 / 90%
-          { name: "Amazon Pay", y: 52100, z: 52, color: "#57D9EAE6" },  // setu-brand-500 / 90%
-          { name: "CRED", y: 28400, z: 28, color: "#6366f1E6" },        // indigo-500 / 90%
-          { name: "Others", y: 17711, z: 18, color: "#2ACFE5E6" },      // setu-brand-600 / 90%
+          { name: "PhonePe",    y: scale(185200, multiplier), z: scale(185, multiplier), color: "#84E3F0E6" },
+          { name: "Google Pay", y: scale(142800, multiplier), z: scale(143, multiplier), color: "#818cf8E6" },
+          { name: "Paytm",      y: scale(78300,  multiplier), z: scale(78,  multiplier), color: "#fb923cE6" },
+          { name: "Amazon Pay", y: scale(52100,  multiplier), z: scale(52,  multiplier), color: "#57D9EAE6" },
+          { name: "CRED",       y: scale(28400,  multiplier), z: scale(28,  multiplier), color: "#6366f1E6" },
+          { name: "Others",     y: scale(17711,  multiplier), z: scale(18,  multiplier), color: "#2ACFE5E6" },
         ],
       },
     ],
@@ -117,7 +130,7 @@ function paymentAppsChart(isDark: boolean): Highcharts.Options {
   };
 }
 
-function bankSplitChart(isDark: boolean): Highcharts.Options {
+function bankSplitChart(isDark: boolean, multiplier: number): Highcharts.Options {
   const theme = getChartTheme(isDark);
   return {
     ...theme,
@@ -154,12 +167,12 @@ function bankSplitChart(isDark: boolean): Highcharts.Options {
         type: "variablepie" as const,
         name: "Transactions",
         data: [
-          { name: "HDFC Bank", y: 132000, z: 132, color: "#4f46e5E6" },    // indigo-600 / 90%
-          { name: "SBI", y: 118500, z: 119, color: "#84E3F0E6" },          // setu-brand-400 / 90%
-          { name: "ICICI Bank", y: 95200, z: 95, color: "#ea580cE6" },     // orange-600 / 90%
-          { name: "Kotak Mahindra", y: 68800, z: 69, color: "#57D9EAE6" }, // setu-brand-500 / 90%
-          { name: "Axis Bank", y: 53100, z: 53, color: "#818cf8E6" },      // indigo-400 / 90%
-          { name: "Others", y: 36911, z: 37, color: "#2ACFE5E6" },         // setu-brand-600 / 90%
+          { name: "HDFC Bank",      y: scale(132000, multiplier), z: scale(132, multiplier), color: "#4f46e5E6" },
+          { name: "SBI",            y: scale(118500, multiplier), z: scale(119, multiplier), color: "#84E3F0E6" },
+          { name: "ICICI Bank",     y: scale(95200,  multiplier), z: scale(95,  multiplier), color: "#ea580cE6" },
+          { name: "Kotak Mahindra", y: scale(68800,  multiplier), z: scale(69,  multiplier), color: "#57D9EAE6" },
+          { name: "Axis Bank",      y: scale(53100,  multiplier), z: scale(53,  multiplier), color: "#818cf8E6" },
+          { name: "Others",         y: scale(36911,  multiplier), z: scale(37,  multiplier), color: "#2ACFE5E6" },
         ],
       },
     ],
@@ -167,7 +180,7 @@ function bankSplitChart(isDark: boolean): Highcharts.Options {
   };
 }
 
-function failedRequestsChart(isDark: boolean): Highcharts.Options {
+function failedRequestsChart(isDark: boolean, multiplier: number): Highcharts.Options {
   const theme = getChartTheme(isDark);
   return {
     ...theme,
@@ -213,27 +226,27 @@ function failedRequestsChart(isDark: boolean): Highcharts.Options {
       {
         type: "bar" as const,
         name: "Technical decline",
-        data: [18900],
-        color: "#ea580cE6",  // orange-600 / 90%
+        data: [scale(18900, multiplier)],
+        color: "#ea580cE6",
       },
       {
         type: "bar" as const,
         name: "Business decline",
-        data: [11200],
-        color: "#fb923cE6",  // orange-400 / 90%
+        data: [scale(11200, multiplier)],
+        color: "#fb923cE6",
       },
       {
         type: "bar" as const,
         name: "Not applicable",
-        data: [3359],
-        color: "#57D9EAE6",  // setu-brand-500 / 90%
+        data: [scale(3359, multiplier)],
+        color: "#57D9EAE6",
       },
     ],
     credits: { enabled: false },
   };
 }
 
-function paymentsSankeyChart(isDark: boolean): Highcharts.Options {
+function paymentsSankeyChart(isDark: boolean, multiplier: number): Highcharts.Options {
   const theme = getChartTheme(isDark);
   return {
     ...theme,
@@ -283,14 +296,14 @@ function paymentsSankeyChart(isDark: boolean): Highcharts.Options {
           { id: "Not Applicable", color: "#6366f1E6" },           // indigo-500 / 90%
         ] as Highcharts.SeriesSankeyNodesOptionsObject[],
         data: [
-          ["Total Transactions", "Processed", 478200],
-          ["Total Transactions", "Dropped", 26311],
-          ["Processed", "Successful", 467666],
-          ["Processed", "Failed", 10534],
-          ["Dropped", "Failed", 26411],
-          ["Failed", "Technical Decline", 18900],
-          ["Failed", "Business Decline", 11200],
-          ["Failed", "Not Applicable", 6845],
+          ["Total Transactions", "Processed",         scale(478200, multiplier)],
+          ["Total Transactions", "Dropped",            scale(26311,  multiplier)],
+          ["Processed",          "Successful",         scale(467666, multiplier)],
+          ["Processed",          "Failed",             scale(10534,  multiplier)],
+          ["Dropped",            "Failed",             scale(26411,  multiplier)],
+          ["Failed",             "Technical Decline",  scale(18900,  multiplier)],
+          ["Failed",             "Business Decline",   scale(11200,  multiplier)],
+          ["Failed",             "Not Applicable",     scale(6845,   multiplier)],
         ],
       },
     ],
@@ -384,11 +397,25 @@ export default function DashboardView() {
     : MOCK_REPORTS;
 
   const TIME_FILTERS = ["Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
+  const multiplier = TIME_MULTIPLIERS[timeFilter] ?? 1;
+
+  const fmt = (n: number) =>
+    n >= 10_000_000 ? `${(n / 10_000_000).toFixed(1)}Cr`
+    : n >= 100_000  ? `${(n / 100_000).toFixed(1)}L`
+    : n.toLocaleString("en-IN");
+
+  const kpi = {
+    total:      scale(504511,  multiplier),
+    amount:     scale(25832,   multiplier), // in Cr
+    successful: scale(467666,  multiplier),
+    failed:     scale(36945,   multiplier),
+  };
 
   return (
     <div className="my-2 ml-2 mr-2 rounded-xl bg-background h-[calc(100vh-16px)] overflow-hidden flex flex-col">
-      <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4">
+      <div className="shrink-0 bg-background z-10 px-6 pt-6 pb-4 space-y-3">
         <h1 className="text-2xl font-bold text-foreground">UPI Transactions</h1>
+        <AIInsightsSummary />
       </div>
     <div className="flex-1 overflow-y-auto px-6 pb-16">
 
@@ -424,7 +451,7 @@ export default function DashboardView() {
             onClick={() => setTimeFilter(chip)}
             className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
               timeFilter === chip
-                ? "bg-foreground text-background"
+                ? "bg-sidebar-accent text-foreground"
                 : "bg-background text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -434,11 +461,11 @@ export default function DashboardView() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
         <Card className="shadow-none border border-border/40">
           <CardContent className="p-6">
             <p className="text-xs font-medium text-muted-foreground tracking-wide">Total transactions</p>
-            <p className="text-2xl font-bold text-foreground mt-1">5,04,511</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(kpi.total)}</p>
             <p className="flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
               <ArrowUp size={11} weight="bold" />
               12.4% vs last period
@@ -448,7 +475,7 @@ export default function DashboardView() {
         <Card className="shadow-none border border-border/40">
           <CardContent className="p-6">
             <p className="text-xs font-medium text-muted-foreground tracking-wide">Total amount paid</p>
-            <p className="text-2xl font-bold text-foreground mt-1">₹25,832Cr</p>
+            <p className="text-2xl font-bold text-foreground mt-1">₹{fmt(kpi.amount)}Cr</p>
             <p className="flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
               <ArrowUp size={11} weight="bold" />
               8.1% vs last period
@@ -456,33 +483,23 @@ export default function DashboardView() {
           </CardContent>
         </Card>
         <Card className="shadow-none border border-border/40">
-          <CardContent className="p-6 space-y-3">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">Success rate</p>
-              <p className="text-3xl font-bold text-foreground mt-1">94.7%</p>
-              <div className="mt-3 w-full">
-                <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex">
-                  <div className="h-full rounded-full bg-emerald-500" style={{ width: "94.7%" }} />
-                  <div className="h-full bg-red-400" style={{ width: "5.3%" }} />
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-6 pt-1">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground tracking-wide">Successful</p>
-                <p className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-lg font-bold text-foreground">4,67,666</span>
-                  <span className="flex items-center gap-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"><ArrowUp size={11} weight="bold" />92.7%</span>
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground tracking-wide">Failed</p>
-                <p className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-lg font-bold text-foreground">36,945</span>
-                  <span className="flex items-center gap-0.5 text-xs font-medium text-red-500 dark:text-red-400"><ArrowDown size={11} weight="bold" />7.3%</span>
-                </p>
-              </div>
-            </div>
+          <CardContent className="p-6">
+            <p className="text-xs font-medium text-muted-foreground tracking-wide">Successful</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(kpi.successful)}</p>
+            <p className="flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <ArrowUp size={11} weight="bold" />
+              92.7% success rate
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none border border-border/40">
+          <CardContent className="p-6">
+            <p className="text-xs font-medium text-muted-foreground tracking-wide">Failed</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{fmt(kpi.failed)}</p>
+            <p className="flex items-center gap-1 mt-2 text-xs font-medium text-red-500 dark:text-red-400">
+              <ArrowDown size={11} weight="bold" />
+              7.3% failure rate
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -498,7 +515,7 @@ export default function DashboardView() {
           <CardContent className="p-6 h-full">
             <HighchartsReact
               highcharts={Highcharts}
-              options={paymentsSankeyChart(isDark)}
+              options={paymentsSankeyChart(isDark, multiplier)}
               ref={(el: HighchartsReact.RefObject | null) => { chartRefs.current[3] = el; }}
             />
           </CardContent>
@@ -513,7 +530,7 @@ export default function DashboardView() {
           <CardContent className="p-6">
             <HighchartsReact
               highcharts={Highcharts}
-              options={paymentAppsChart(isDark)}
+              options={paymentAppsChart(isDark, multiplier)}
               ref={(el: HighchartsReact.RefObject | null) => { chartRefs.current[0] = el; }}
             />
           </CardContent>
@@ -528,7 +545,7 @@ export default function DashboardView() {
           <CardContent className="p-6">
             <HighchartsReact
               highcharts={Highcharts}
-              options={bankSplitChart(isDark)}
+              options={bankSplitChart(isDark, multiplier)}
               ref={(el: HighchartsReact.RefObject | null) => { chartRefs.current[1] = el; }}
             />
           </CardContent>
@@ -551,7 +568,7 @@ export default function DashboardView() {
           <CardContent className="p-6">
             <HighchartsReact
               highcharts={Highcharts}
-              options={failedRequestsChart(isDark)}
+              options={failedRequestsChart(isDark, multiplier)}
               ref={(el: HighchartsReact.RefObject | null) => { chartRefs.current[2] = el; }}
             />
           </CardContent>
