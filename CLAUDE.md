@@ -86,6 +86,28 @@ All view/page components use `"use client"` — there are no server components b
 - Brand palette: `setu-brand-*` (teal/cyan scale) defined in `tailwind.config.ts`.
 - Smooth dark mode transitions: temporarily add `theme-transition` class to `<html>`, removed after 500ms.
 
+### Smart Insights panel
+
+`src/components/AIInsightsSummary.tsx` — exports `<AIInsightsSummary />`, rendered inside `DashboardView` (`src/components/DashboardView.tsx`).
+
+**What it is:** A button on the dashboard that opens a right-side `Sheet` (500px wide) showing AI-generated UPI transaction analysis. It also includes an inline follow-up Q&A interface.
+
+**Structure of the sheet:**
+1. **Header** — title, date range, refresh + close buttons
+2. **Summary** — 3-bullet highlight list in a `bg-muted` card
+3. **Notable Changes** — collapsible section with animated `AnimatePresence` expand/collapse
+4. **Risk Signals** — collapsible section, same pattern, red icon accent
+5. **Inline Q&A** — chat pairs (user pill right-aligned + assistant answer) appended below the insight sections; auto-scrolls on new messages
+6. **Floating footer** — gradient fade overlay + textarea input + suggestion chip ticker
+
+**Suggestion chips:** `exploreFurther` questions cycle automatically every 2s (ticker mode) when the sheet is open. A `Rows` icon button expands the full list. Clicking a chip pre-fills the textarea.
+
+**Chat / streaming:** `getMockResponse(q)` returns a hardcoded string based on keyword matching. Streaming is simulated character-by-character with `setInterval` at 18ms/char. Real API integration would replace `getMockResponse` and the interval loop.
+
+**Entry point button:** The `<AIInsightsSummary />` button has an animated beam effect (slides left-to-right, runs twice on mount) and a teal border on hover. Both use inline `style` + CSS keyframes injected via `<style>`.
+
+**All data is mocked** in the `MOCK_INSIGHTS` const at the top of the file — no API calls. To wire up a real backend, replace `MOCK_INSIGHTS` with a fetch and `getMockResponse` with a streaming Claude API call.
+
 ### MCP servers
 
 - **agentation** MCP server configured (runs via `npx agentation-mcp server` on port 4747)
