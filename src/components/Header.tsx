@@ -13,9 +13,12 @@ export default function Header({ showStatus = false }: { showStatus?: boolean })
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
-    if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    if (stored === "dark") {
       setDark(true);
       document.documentElement.classList.add("dark");
+    } else {
+      setDark(false);
+      document.documentElement.classList.remove("dark");
     }
     const auth = localStorage.getItem("bridge_auth");
     if (auth === "true") {

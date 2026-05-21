@@ -12,11 +12,10 @@ export default function LoginPage() {
   useEffect(() => {
     const stored = localStorage.getItem("theme");
 
-    if (
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
+    if (stored === "dark") {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
@@ -24,7 +23,10 @@ export default function LoginPage() {
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#032428] p-4 sm:p-6">
       <LoginGrainientBackground />
       <div className="relative z-10 flex w-full justify-center">
-        <BridgeLoginCard onSuccess={() => router.push("/")} />
+        <BridgeLoginCard
+          variant="center-card"
+          onSuccess={() => router.push("/")}
+        />
       </div>
     </main>
   );

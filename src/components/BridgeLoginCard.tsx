@@ -33,6 +33,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { LoginGrainientBackground } from "@/components/LoginGrainientBackground";
 import { cn } from "@/lib/utils";
 
 type AuthMode = "login" | "signup";
@@ -121,7 +122,7 @@ export function BridgeLoginCard({
   onClose,
   className,
   initialMode = "login",
-  variant = "split",
+  variant = "center-card",
 }: BridgeLoginCardProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [step, setStep] = useState<AuthStep>("credentials");
@@ -379,12 +380,7 @@ export function BridgeLoginCard({
     >
       {!isCenterCard && (
         <div className="relative hidden w-[473px] shrink-0 overflow-hidden lg:block">
-          <img
-            src="/login-bridge-splash.png"
-            alt=""
-            className="absolute left-0 top-[-53px] h-[728px] w-[485px] max-w-none object-cover"
-          />
-          <div className="absolute inset-0 bg-[#09383e] mix-blend-color" />
+          <LoginGrainientBackground />
           <img
             src="/setu-by-pinelabs-logo.svg"
             alt="Setu by Pine Labs"

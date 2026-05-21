@@ -286,7 +286,7 @@ export default function HomePage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [loginSurfaceVariant, setLoginSurfaceVariant] = useState<"split" | "center-card">("split");
+  const [loginSurfaceVariant, setLoginSurfaceVariant] = useState<"split" | "center-card">("center-card");
   const [surveyOpen, setSurveyOpen] = useState(false);
   const [showKycBanner, setShowKycBanner] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "products" | "dashboard" | "docs" | "settings" | "configuration">("home");
@@ -324,9 +324,12 @@ export default function HomePage() {
       setShowKycBanner(true);
     }
     const stored = localStorage.getItem("theme");
-    if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    if (stored === "dark") {
       setDark(true);
       document.documentElement.classList.add("dark");
+    } else {
+      setDark(false);
+      document.documentElement.classList.remove("dark");
     }
     const auth = localStorage.getItem("bridge_auth");
     if (auth === "true") {
@@ -1236,8 +1239,8 @@ export default function HomePage() {
             }`}
           >
             {[
-              ["split", "Split modal"],
               ["center-card", "Full-screen"],
+              ["split", "Split modal"],
             ].map(([variant, label]) => (
               <button
                 key={variant}
